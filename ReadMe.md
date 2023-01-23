@@ -107,7 +107,7 @@ Die Funktionen in der Datei _Solution\_generator.py_ sind in der Klasse _Perform
     - Führt für den gegebenen Schedule ein S2PL aus. Gibt den Schedule nach dem Ausführen des lockings aus und gegebenenfalls einen String falls ein Deadlock vorliegt. Das Ausführen des S2PL ist auch nicht möglich, wenn ein Deadlock vorliegt.
 - perform_SS2PL (schedule: Schedule)-> tuple[Schedule, str]
     - Führt für den gegebenen Schedule ein SS2PL aus. Gibt den Schedule nach dem Ausführen des lockings aus und gegebenenfalls einen String falls ein Deadlock vorliegt. Das Ausführen des SS2PL ist auch nicht möglich, wenn ein Deadlock vorliegt.
-- perform_C2PL (schedule: Schedule)-> tuple[Schedule, str]
+- perform_C2PL (schedule: Schedule)-> Schedule
     - Führt für den gegebenen Schedule ein C2PL aus. Gibt den Schedule nach dem Ausführen des lockings aus.
 - predict_deadlock (schedule: Schedule)-> bool:
     - Prüft ob ein gegebener Schedule einen Deadlock enthält. Dies passiert durch den Versuch ein SS2PL vorzunehmen.
