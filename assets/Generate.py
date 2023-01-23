@@ -4,12 +4,11 @@ import copy
 from typing import Union
 from Solution_generator import predict_deadlock
 
-deadlock_failed = 0
 
 def generate (transactions: int, resources: list[str], deadlock = None,  recovery = None)-> tuple[Schedule,str]:
     schedule = generate_schedule(transactions, resources, deadlock,  recovery)
     schedule_test = copy.deepcopy(schedule)
-    if deadlock:
+    if deadlock == False:
         for i in range(10):
             if not predict_deadlock(schedule_test):
                 break
@@ -28,7 +27,7 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
             raise ValueError("Short is not yet working with deadlock or recovery.")
         elif deadlock in [True, False]:
             case = 'deadlock'
-        elif recovery in ['r','a','s']:
+        elif recovery in ['r','a','s','n']:
             case = 'recovery'
         
         # initiate schedule parts 
@@ -63,19 +62,25 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
             short_trans = 0
 
         while index > 0 :
+            trans = 0
             if index == len(transl[0]):
                 for u in transl[0]:
                     if sum(transl[u])!=0: 
                         transl[u] = [4]
-            
-            #choose random transaction, operation and resource
-            trans = random.choice(transl[0])
+                    else:
+                        index+=1
+                        trans = copy.deepcopy(u)
+            if trans == 0:
+                #choose random transaction, operation and resource
+                trans = random.choice(transl[0])
             if short and i ==3 and transl[short_trans]==[3]:
                 trans = short_trans
 
-            if transl[trans][0] == 0 or (len(transl[0]) == 1 and  index > 1) or (trans == short_trans and index > 4):       # if none performed, if not the last action, but only one operation remains
+            # or (trans == short_trans and index > 4)
+            if transl[trans][0] == 0 or (len(transl[0]) == 1 and  index > 1) :       # if none performed, if not the last action, but only one operation remains
                 conclude = False
-            elif transl[trans][0] == 4:     # if all performed, must be in this position, so one transaction in not forced to performed till the end by more then 4 times 
+                # print(2222)
+            elif transl[trans][0] >= 4:     # if all performed, must be in this position, so one transaction in not forced to performed till the end by more then 4 times 
                 conclude = True
             else:                           # else (between 1-3 actions)
                 conclude = bool(random.choice(conclude_choice))
@@ -113,11 +118,17 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
             index -= 1
             i+=1
         schedule = Schedule(operations, resources, transactions, aborts, commits)
+        # print(schedule)
         return schedule
         
 def generate_recovery (transactions:int, resources: list[str], operation_ch:list, recovery: str,  index: int, i: int, list_write: list, reads: list, not_next:bool, transl: list,  trans:int, conclude: bool, commits, aborts)-> tuple[int, list, list, bool, list, dict, dict, OperationType, int, str]:
-    if (recovery == "r" and len(transl[0])==2 and not not_next) or (recovery == "a" and not not_next and len(transl[0])==2):
+    prepared = bool([read for x in reads for read in x])
+    if len(transl[0])==2 and not not_next and recovery in ["r","a"] :
         conclude = False    
+    elif recovery == "n" and (not prepared and not not_next) and len(transl[0])==2 : #nobody is reading from anybody
+        conclude = False
+        # print(8888)
+    # print(i, index, not not_next, not prepared,reads, [read for x in reads for read in x],conclude, 10101  )
     if conclude:    # add an commit (without abort (mabye nth))
         if recovery == "r":
             if reads[trans-1]:
@@ -126,6 +137,18 @@ def generate_recovery (transactions:int, resources: list[str], operation_ch:list
                     trans = random.choice(new_trans)
                 else:
                     return index, list_write, reads, not_next, transl, commits, aborts, operation_ch[0],0,resources[0]
+        elif recovery == "n" and prepared and not not_next:
+            # check whether critical
+            # print("colclude")
+            if len(transl[0])==2:#critical
+                if not reads[trans-1]:
+                    # print(2020, trans , reads[trans-1], reads)
+                    trans = random.choice([x for x in transl[0] if x != trans])
+                    # print(20, trans,reads[trans-1] )
+                not_next = True
+            elif reads[trans-1]:
+                    # print(100,reads[trans-1])
+                    not_next = True
         commits[trans]=i
         transl[0].remove(trans)
         reads = [[d for d in r if d!= trans] for r in reads]
@@ -134,12 +157,45 @@ def generate_recovery (transactions:int, resources: list[str], operation_ch:list
     else:   # add an action
         op = random.choice(operation_ch)
         res = random.choice(resources)
-        if recovery == "r":# commits und aborts übergeben mit args ** auseinander und zusammen setzen
+        if recovery == "n":
+            # # print(len(transl[0])+1, not_next, reads)
+            # test if necessary already reads from relation
+            # print(index == len(transl[0])+1,not not_next,  not prepared)
+            if index <= len(transl[0])+1 and not not_next and not prepared:# no reads from relation yet
+                write = list(filter(lambda op: op.tx_number not in commits and op.tx_number not in aborts, list_write))
+                if write:#perform read
+                    if index < len(transl[0])+1:
+                        index = len(transl[0])+1
+                    action = random.choice(write)
+                    op = OperationType.READ
+                    res = action.resource
+                    trans = random.choice([x for x in transl[0] if x != action.tx_number])
+                    reads [trans-1] = list(set(reads[trans-1]+ [action.tx_number]))
+                    transl[trans][0]+=1
+                else: #perform write
+                    if index < len(transl[0])+1:
+                        index = len(transl[0])+2
+                    op = OperationType.WRITE
+                    transl[trans][0]+=1
+                    list_write = [r for r in list_write if r.resource != res]
+                    list_write.append(Operation(op,trans,res,i))
+            else:
+                if op.value == "r":
+                    write = list(filter(lambda op: op.resource == res and op.tx_number != trans and op.tx_number not in commits and op.tx_number not in aborts, list_write))
+                    if write:
+                        h_write = [s.tx_number for s in write]
+                        reads[trans-1] = list(set(reads[trans-1] + h_write))
+                else:
+                    list_write = [r for r in list_write if r.resource != res]
+                    list_write.append(Operation(op,trans,res,i))
+                transl[trans][0]+=1
+
+        elif recovery == "r":
             write = list(filter(lambda op: op.resource == res and op.tx_number != trans and op.tx_number not in commits and op.tx_number not in aborts, list_write))
             if index == len(transl[0])+1 and not not_next:
                 if not write:
                     write_bigger = list(filter(lambda op: op.tx_number not in commits and op.tx_number not in aborts, list_write))
-                    if write_bigger:# check for other possabilities
+                    if write_bigger:# check for other possibilities
                         operation_ch = random.choice(write_bigger)
                         res = operation_ch.resource
                         op = OperationType.READ
