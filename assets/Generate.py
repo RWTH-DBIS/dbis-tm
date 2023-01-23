@@ -1,14 +1,31 @@
 from TM import Schedule, OperationType, Recovery, Operation
 import random
 import copy
+from typing import Union
+from Solution_generator import predict_deadlock
 
-def generate_schedule (transactions: int, resources: list[str], deadlock = None,  recovery = None, short = False)-> tuple[Schedule, str]:
-        mssg = ""
+deadlock_failed = 0
+
+def generate (transactions: int, resources: list[str], deadlock = None,  recovery = None)-> tuple[Schedule,str]:
+    schedule = generate_schedule(transactions, resources, deadlock,  recovery)
+    schedule_test = copy.deepcopy(schedule)
+    if deadlock:
+        for i in range(10):
+            if not predict_deadlock(schedule_test):
+                break
+            schedule = generate_schedule(transactions, resources, deadlock)
+            schedule_test = copy.deepcopy(schedule)
+        if not predict_deadlock(schedule_test):
+            return schedule, "Please try again."
+    return schedule,""
+
+
+def generate_schedule (transactions: int, resources: list[str], deadlock = None,  recovery = None, short = False)-> Schedule:
         case = ''
         if bool(deadlock) and bool(recovery):
-            return Schedule, "Not allowed to choose deadlock and recovery."
+            raise ValueError("Not allowed to choose deadlock and recovery.")
         elif (deadlock and short) or (recovery and short):
-            mssg = "Short is not yet working with deadlock or recovery."
+            raise ValueError("Short is not yet working with deadlock or recovery.")
         elif deadlock in [True, False]:
             case = 'deadlock'
         elif recovery in ['r','a','s']:
@@ -96,8 +113,8 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
             index -= 1
             i+=1
         schedule = Schedule(operations, resources, transactions, aborts, commits)
-        return schedule, mssg
-
+        return schedule
+        
 def generate_recovery (transactions:int, resources: list[str], operation_ch:list, recovery: str,  index: int, i: int, list_write: list, reads: list, not_next:bool, transl: list,  trans:int, conclude: bool, commits, aborts)-> tuple[int, list, list, bool, list, dict, dict, OperationType, int, str]:
     if (recovery == "r" and len(transl[0])==2 and not not_next) or (recovery == "a" and not not_next and len(transl[0])==2):
         conclude = False    
