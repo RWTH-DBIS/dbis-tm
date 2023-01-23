@@ -1,12 +1,18 @@
 from TM import Schedule, Scheduling, Operation, OperationType
+from typing import Union
  
 class Perform_scheduling:
     """
     I am a class which performs the schedulers.
+
+    Functions:
+        perform_C2PL (performs conservative 2-phase-locking on schedule)
+        perform_S2PL (performs strict 2-phase-locking on schedule)
+        perform_SS2PL (performs strong strict 2-phase-locking on schedule)
     """
     
     @classmethod
-    def perform_S2PL(cls, schedule: Schedule)-> tuple[Schedule, str]:
+    def perform_S2PL(cls, schedule: Union[Schedule, str])-> tuple[Schedule, str]:
         '''
         This method performs S2PL.
         - No locks allowed after first unlock.
@@ -15,6 +21,11 @@ class Perform_scheduling:
         Takes:  schedule
         Returns:    the locked schedule
         '''
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+        
         operations = []
         aborts = dict()
         commits = dict()
@@ -90,7 +101,7 @@ class Perform_scheduling:
         return Schedule(operations, schedule.resources, schedule.tx_count, aborts, commits),""
     
     @classmethod
-    def perform_SS2PL(cls, schedule: Schedule)-> tuple[Schedule, str]:
+    def perform_SS2PL(cls,schedule: Union[Schedule, str])-> tuple[Schedule, str]:
         '''
         Method to perform an SS2PL lock. 
         - No locks allowed after first unlock.
@@ -100,6 +111,11 @@ class Perform_scheduling:
         Returns:    the locked schedule
         
         '''
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+        
         len_operations = len(schedule.operations)
         operations = []
         aborts = dict()
@@ -160,7 +176,7 @@ class Perform_scheduling:
         return Schedule(operations, schedule.resources, schedule.tx_count, aborts, commits),""
     
     @classmethod
-    def perform_C2PL(cls, schedule: Schedule)-> tuple[Schedule, str]:
+    def perform_C2PL(cls,schedule: Union[Schedule, str])-> Schedule:
         '''
         This method performs C2PL.
         - No locks allowed after first unlock.
@@ -169,6 +185,11 @@ class Perform_scheduling:
         Takes:  schedule
         Returns:    the locked schedule
         '''
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+        
         operations = []
         aborts = dict()
         commits = dict()
@@ -255,9 +276,9 @@ class Perform_scheduling:
             if len(schedule.operations) == 0:
                 break
 
-        return Schedule(operations, schedule.resources, schedule.tx_count, aborts, commits),""
+        return Schedule(operations, schedule.resources, schedule.tx_count, aborts, commits)
 
-def predict_deadlock(schedule: Schedule)-> bool:
+def predict_deadlock(schedule: Union[Schedule, str])-> bool:
     #can only perform 2SSPL if no deadlock occurs
     x, is_deadlock = Perform_scheduling.perform_SS2PL(schedule)
     if is_deadlock:
@@ -267,7 +288,20 @@ def predict_deadlock(schedule: Schedule)-> bool:
 class Perform_conflictgraph:
 
     @classmethod
-    def compute_conflict_quantity(cls, schedule: Schedule) -> str:
+    def compute_conflict_quantity(cls,schedule: Union[Schedule, str]) -> str:
+        '''
+        Method to perform the omputing of the conflict set.
+        No check for the corectnes of the schedule included. Please check this before using.
+        Takes:
+        - A schedule
+        Reutrns:
+        - The conflict set
+        '''
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+        
         conflict_list_dup = []
         op = schedule.operations
         check = False
