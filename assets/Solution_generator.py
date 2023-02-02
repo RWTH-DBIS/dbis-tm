@@ -1,5 +1,6 @@
-from TM import Schedule, Scheduling, Operation, OperationType
+from TM import Schedule, Scheduling, Operation, OperationType, ConflictGraph, ConflictGraphNode
 from typing import Union
+from graphviz import Digraph
  
 class Perform_scheduling:
     """
@@ -288,7 +289,7 @@ def predict_deadlock(schedule: Union[Schedule, str])-> bool:
 class Perform_conflictgraph:
 
     @classmethod
-    def compute_conflict_quantity(cls,schedule: Union[Schedule, str]) -> str:
+    def compute_conflict_quantity(cls,schedule: Union[Schedule, str]) -> tuple[str,list]:
         '''
         Method to perform the omputing of the conflict set.
         No check for the corectnes of the schedule included. Please check this before using.
@@ -334,4 +335,25 @@ class Perform_conflictgraph:
         if conflict_str[len(conflict_str)-1:] == ",":
             conflict_str = conflict_str[:-1]
         conflict_str +=  "}"
-        return conflict_str
+        return conflict_str, [conflict_list, schedule.tx_count]
+
+    @classmethod
+    def compute_conflictgraph(cls,conflict_list: list ):
+        trans = conflict_list[1]
+        conflicts_ob = conflict_list[0]
+        knots = []
+        for i in range(1,trans+1):
+            knots.append(ConflictGraphNode(i))
+        graph = ConflictGraph()
+        # extract trans
+        conflicts_dupl = []
+        for i in conflicts_ob:
+            conflicts_dupl.append([i[0].tx_number, i[1].tx_number])
+        # clean
+        conflicts = []
+        conflicts = [conf for conf in conflicts_dupl if conf not in conflicts]
+        print(conflicts)
+        for i in conflicts:
+            print(i, knots)
+            graph.add_edge(knots[i[0]-1],knots[i[1]-1])
+        return graph
