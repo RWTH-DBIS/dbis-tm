@@ -329,7 +329,9 @@ class Perform_conflictgraph:
         # compute string
         conflict_str = "{"
         for [k,l] in conflict_list:
-            conflict_str += "(" + k.op_type.value + str(k.tx_number) + "(" + k.resource + ") ," + l.op_type.value + str(l.tx_number) + "(" + l.resource + ")),"
+            conflict_str += "(\"" + k.op_type.value + str(k.tx_number) + "(" + k.resource + ")\" ,\"" + l.op_type.value + str(l.tx_number) + "(" + l.resource + ")\"),"
             # {("w_3(y)", "w_1(y)"), ("w_1(y)", "r_3(y)"), ("w_1(z)", "w_3(z)"), ("w_1(x)", "r_3(x)")}
-        conflict_str += "}"
+        if conflict_str[len(conflict_str)-1:] == ",":
+            conflict_str = conflict_str[:-1]
+        conflict_str +=  "}"
         return conflict_str
