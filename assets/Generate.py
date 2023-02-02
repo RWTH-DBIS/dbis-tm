@@ -100,11 +100,13 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
                     else:
                         commits[trans]= i
                     transl[0].remove(trans)
+                    trans = trans*(-1)
                     
 
                 else:   # add an action
                     op = random.choice(operation_ch)
                     res = random.choice(resources)
+                    transl[trans][0]+=1
 
             if trans == 0:
                 continue  
@@ -134,20 +136,15 @@ def generate_recovery (transactions:int, resources: list[str], operation_ch:list
                 operations2.reverse()
                 list_write = []
                 for r in resources:
-                    list_res_op = list(filter(lambda op: op.resource==r and op.tx_number != trans and op.tx_number not in commits and op.tx_number not in aborts and op.op_type.value == "w", operations2))
-                    if list_res_op:
+                    # in commits have to be included but are not allowed to be wirtten into the list
+                    list_res_op = list(filter(lambda op: op.resource==r and op.tx_number != trans and op.tx_number and op.tx_number not in aborts and op.op_type.value == "w", operations2))
+                    if list_res_op and list_res_op[0].tx_number not in commits:
                         list_write.append(list_res_op[0])
-            if recovery == "n":
+            if recovery in ['n','r']:
                 if not prepared and len(transl[0])<=index and not not_next:
                     if not [write for write in list_write if write.tx_number != trans]:
                         index = len(transl[0]) +2
                     else:
-                        index = len(transl[0])+1
-            elif recovery == 'r':
-                if len(transl[0])<=index and not prepared and not not_next:
-                    if not [write for write in list_write if write.tx_number != trans]:
-                        index = len(transl[0])+2
-                    else: 
                         index = len(transl[0])+1
 
         else:
