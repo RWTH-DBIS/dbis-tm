@@ -121,7 +121,7 @@ class Schedule:
     @classmethod
     def parse_schedule(cls, schedule_str: str) -> tuple[Schedule, str]:
         """
-        Parse the given schedule string.
+        Parse the given string to a schedule.
 
         Returns:
             Created Schedule object
@@ -260,6 +260,11 @@ class Serializability:
 
         NOTE: This function operates on the passed object!
         """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+            
         schedule.operations = list(filter(lambda op: op.tx_number not in schedule.aborts, schedule.operations))
 
     @classmethod
@@ -271,6 +276,11 @@ class Serializability:
             true iff schedule is serializable
             conflict graph as adjacency-list
         """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+            
         # graph[1] = {2,3} means that tx 1 is "in conflict" with txs 2 and 3
         graph = {operation.tx_number: set() for operation in schedule.operations}
 
@@ -369,6 +379,11 @@ class Recovery:
             - not (a_j <_s r_i(x))
             - w_j(x) <_s w_k(x) <_s r_i(x) => a_k <_s r_i(x)
         """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+
         for op1, i in zip(schedule.operations, range(len(schedule.operations))):
             if not (op1.op_type == OperationType.READ and op1.tx_number == tx1 and op1.resource == resource):
                 continue
@@ -502,8 +517,7 @@ class Scheduling:
         is_C2PL (checks whether schedule satisfies conservative 2-phase-locking)
         is_S2PL (checks whether schedule satisfies strict 2-phase-locking)
         is_SS2PL (checks whether schedule satisfies strong strict 2-phase-locking)
-        parse_operations (helper method to parse an operation to the operation of the schedule)
-        has_deadlock (checks whether schedule contains deadlock)
+        is_operations_same (Checks whether the two  given schedules do have the same operations.)
     """
 
     def __init__(self):
@@ -521,6 +535,11 @@ class Scheduling:
             empty list if schedule satisfies 2-phase-locking
                   else counterexample
         """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+            
         transactions = [[]]  # [[1,2,3,...][#1 ][#2][#3]...]
         locks = []  # all things which have to be locked [[locks of transaction 1][...]]
 
@@ -582,6 +601,11 @@ class Scheduling:
             empty list if schedule satisfies conservative 2-phase-locking
                   else counterexample
         """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+            
         res = cls.is_2PL(schedule)
         if not res[0]:
             return False, res[1]
@@ -609,6 +633,11 @@ class Scheduling:
             empty list if schedule satisfies strict 2-phase-locking
                   else counterexample
         """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+            
         res = cls.is_2PL(schedule)
         if not res[0]:
             return False, res[1]
@@ -637,6 +666,11 @@ class Scheduling:
             empty list if schedule satisfies strong strict 2-phase-locking
                   else counterexample
         """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+            
         res = cls.is_2PL(schedule)
         if not res[0]:
             return False, res[1]
@@ -669,6 +703,16 @@ class Scheduling:
             True if those schedules are the same
             False otherwise
         """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+        if isinstance(mod_schedule, str):
+            mod_schedule = Schedule.parse_schedule(mod_schedule)
+            assert not mod_schedule[1]
+            mod_schedule = mod_schedule[0]
+            
+            
         org_operations = list(filter(
             lambda op: op.op_type in [OperationType.READ, OperationType.WRITE], mod_schedule.operations))
         for x in org_operations:
@@ -690,11 +734,3 @@ class Scheduling:
             if not (trans_op_mod == trans_op_org):
                 return False
         return True
-
-    @classmethod
-    def predict_deadlock(cls, schedule: Schedule)-> bool:
-        #can only perform 2SSPL if no deadlock occurs
-        x, is_deadlock = Scheduling.perform_2PL(schedule)
-        if is_deadlock:
-            return True
-        return False
