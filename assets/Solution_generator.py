@@ -351,9 +351,7 @@ class Perform_conflictgraph:
             conflicts_dupl.append([i[0].tx_number, i[1].tx_number])
         # clean
         conflicts = []
-        conflicts = [conf for conf in conflicts_dupl if conf not in conflicts]
-        print(conflicts)
+        [conflicts.append(conf) for conf in conflicts_dupl if conf not in conflicts]
         for i in conflicts:
-            print(i, knots)
             graph.add_edge(knots[i[0]-1],knots[i[1]-1])
         return graph
