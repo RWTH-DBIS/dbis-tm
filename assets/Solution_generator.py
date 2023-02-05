@@ -1,6 +1,7 @@
 from TM import Schedule, Scheduling, Operation, OperationType, ConflictGraph, ConflictGraphNode
 from typing import Union
 from graphviz import Digraph
+import copy 
  
 class Perform_scheduling:
     """
@@ -26,7 +27,7 @@ class Perform_scheduling:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-        
+        schedule = copy.deepcopy(schedule)
         operations = []
         aborts = dict()
         commits = dict()
@@ -117,6 +118,7 @@ class Perform_scheduling:
             assert not schedule[1]
             schedule = schedule[0]
         
+        schedule = copy.deepcopy(schedule)
         len_operations = len(schedule.operations)
         operations = []
         aborts = dict()
@@ -191,6 +193,7 @@ class Perform_scheduling:
             assert not schedule[1]
             schedule = schedule[0]
         
+        schedule = copy.deepcopy(schedule)
         operations = []
         aborts = dict()
         commits = dict()
