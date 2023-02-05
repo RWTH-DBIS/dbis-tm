@@ -2,7 +2,6 @@ from Generate import generate
 from Solution_generator import Perform_conflictgraph, Perform_scheduling
 import TM
 import random
-import copy 
 from IPython.display import display
 
 
@@ -64,7 +63,6 @@ class Creating:
     def create_recovery(self)->Task:
         options = ['n','r','a','s']
         perform = random.sample(options,3)
-        print(perform)
 
         schedule1 = generate(3,['a','b','c'], recovery = perform[0])[0]
         schedule2 = generate(3,['a','b','c'], recovery = perform[1])[0]
@@ -108,9 +106,9 @@ class Creating:
         solution3 = ([solution3_r[0],solution3_a[0],solution3_s[0]], [[solution3_r[1],solution3_a[1],solution3_s[1]]])
 
         
-        schedule1 = TM.Schedule.parse_string(schedule1)[0]
-        schedule2 = TM.Schedule.parse_string(schedule2)[0]
-        schedule3 = TM.Schedule.parse_string(schedule3)[0]
+        schedule1 = [perform[0],TM.Schedule.parse_string(schedule1)[0]]
+        schedule2 = [perform[0],TM.Schedule.parse_string(schedule2)[0]]
+        schedule3 = [perform[0],TM.Schedule.parse_string(schedule3)[0]]
         return Task(schedule1, solution1, schedule2, solution2, schedule3, solution3)
 
 
@@ -129,9 +127,9 @@ class Creating:
                 break
         schedule3 = schedule3[0]
 
-        solution1 =  Perform_scheduling.perform_SS2PL(copy.deepcopy(schedule1))[0]
-        solution2 = Perform_scheduling.perform_C2PL(copy.deepcopy(schedule2))
-        solution3 = Perform_scheduling.perform_S2PL(copy.deepcopy(schedule3))[0]
+        solution1 =  Perform_scheduling.perform_SS2PL(schedule1)[0]
+        solution2 = Perform_scheduling.perform_C2PL(schedule2)
+        solution3 = Perform_scheduling.perform_S2PL(schedule3)[0]
         schedule1 = TM.Schedule.parse_string(schedule1)[0]
         schedule2 = TM.Schedule.parse_string(schedule2)[0]
         schedule3 = TM.Schedule.parse_string(schedule3)[0]
