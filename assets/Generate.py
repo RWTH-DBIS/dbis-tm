@@ -1,4 +1,5 @@
-from TM import Schedule, OperationType, Recovery, Operation
+from TMBasic import Schedule, OperationType, Operation
+from TMSolver import Recovery
 import random
 import copy
 from typing import Union
