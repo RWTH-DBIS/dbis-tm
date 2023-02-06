@@ -40,25 +40,27 @@ class Creating:
         
         for i in range(1000):
             schedule3 = generate(3,['r','u','k'])[0]
-            task3_seril = TM.Serializability.is_serializable(schedule3)[0]
+            task3_seril = TM.Serializability.is_serializable(schedule3)
             task3 = Perform_conflictgraph.compute_conflict_quantity(schedule3)
             if len(task3)> 90:
                 break 
         for i in range(1000):
             for i in range(1000) :
                 schedule4 = generate(3,['r','u','k'])[0]
-                if TM.Serializability.is_serializable(schedule4)!=task3_seril:
+                if TM.Serializability.is_serializable(schedule4)!=task3_seril[0]:
                     break
-            task4_seril =  TM.Serializability.is_serializable(schedule4)[0]
+            task4_seril =  TM.Serializability.is_serializable(schedule4)
             task4 = Perform_conflictgraph.compute_conflict_quantity(schedule4)
             if len(task4)> 90:
                 break
-        task3_solution = [task3_seril,Perform_conflictgraph.compute_conflictgraph(task3[1]).get_graphviz_graph]
-        task4_solution = [task4_seril,Perform_conflictgraph.compute_conflictgraph(task4[1]).get_graphviz_graph]
+        task3_solution = [task3_seril[0],Perform_conflictgraph.compute_conflictgraph(task3_seril[1]).get_graphviz_graph]
+        task4_solution = [task4_seril[0],Perform_conflictgraph.compute_conflictgraph(task4_seril[1]).get_graphviz_graph]
         schedule1 = TM.Schedule.parse_string(schedule1)[0]
         schedule2 = TM.Schedule.parse_string(schedule2)[0]
+        schedule3 = TM.Schedule.parse_string(schedule3)[0]
+        schedule4 = TM.Schedule.parse_string(schedule4)[0]
 
-        return Task([schedule1,schedule2],[schedule1_solution,schedule2_solution],[task3[0],task4[0]], [task3_solution,task4_solution]  )
+        return Task([schedule1,schedule2],[schedule1_solution,schedule2_solution],[schedule3,task3,schedule4,task4], [task3_solution,task4_solution]  )
 
     def create_recovery(self)->Task:
         options = ['n','r','a','s']
