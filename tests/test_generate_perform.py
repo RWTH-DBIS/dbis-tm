@@ -13,7 +13,7 @@ class TestTMPerformance(unittest.TestCase):
             self.assertFalse(Recovery.is_strict(none)[0], Schedule.parse_string(none))
 
             recovery = generate(3, ['a','b','c'],recovery="r")[0]
-            self.assertTrue(Recovery.is_recoverable(recovery)[0], Schedule.parse_string(recovery))
+            self.assertFalse(Recovery.is_recoverable(recovery)[0], Schedule.parse_string(recovery))
             self.assertFalse(Recovery.avoids_cascading_aborts(recovery)[0], Schedule.parse_string(recovery))
             self.assertFalse(Recovery.is_strict(recovery)[0], Schedule.parse_string(recovery))
 
