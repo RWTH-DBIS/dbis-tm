@@ -35,14 +35,14 @@ class Creating:
             schedule2 = generate(3,['a','b','c'])[0]
             schedule1_solution = Perform_conflictgraph.compute_conflict_quantity(schedule1)
             schedule2_solution = Perform_conflictgraph.compute_conflict_quantity(schedule2)
-            if schedule1_solution !='{}' and schedule2_solution != '{}':
+            if len(schedule1_solution)>=2 and len(schedule2_solution)>=2:
                 break
         
         for i in range(1000):
             schedule3 = generate(3,['r','u','k'])[0]
             task3_seril = TM.Serializability.is_serializable(schedule3)
             task3 = Perform_conflictgraph.compute_conflict_quantity(schedule3)
-            if len(task3)> 90:
+            if len(task3)> 5:
                 break 
         for i in range(1000):
             for i in range(1000) :
@@ -51,7 +51,7 @@ class Creating:
                     break
             task4_seril =  TM.Serializability.is_serializable(schedule4)
             task4 = Perform_conflictgraph.compute_conflict_quantity(schedule4)
-            if len(task4)> 90:
+            if len(task4)> 5:
                 break
         task3_solution = [task3_seril[0],Perform_conflictgraph.compute_conflictgraph(task3_seril[1]).get_graphviz_graph]
         task4_solution = [task4_seril[0],Perform_conflictgraph.compute_conflictgraph(task4_seril[1]).get_graphviz_graph]
