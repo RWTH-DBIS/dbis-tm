@@ -5,8 +5,9 @@ Created 2022-05
 @author: Marc
 @author: Wolfgang
 """
-import dbisvl.tm.TM as TM
-from dbisvl.tm.TMCheck import SyntaxCheck, ScheduleCheck
+import assets.TMBasic as TMBasic
+import assets.TMSolver as TMSolver
+from assets.TMCheck import SyntaxCheck, ScheduleCheck
 
 from tests.scheduletest import ScheduleTest
 
@@ -85,7 +86,7 @@ class TestTM(ScheduleTest):
         """
         for (schedule, is_well_formed, _), i in zip(self.unparsed_schedule_tests,
                                                     range(0, len(self.unparsed_schedule_tests))):
-            _, msg = TM.Schedule.parse_schedule(schedule)
+            _, msg = TMBasic.Schedule.parse_schedule(schedule)
             self.assertEqual(is_well_formed, msg == "", f"Schedule {i}:")
 
     def test_serializability(self):
@@ -94,10 +95,10 @@ class TestTM(ScheduleTest):
         """
         for (schedule, _, is_serializable), i in zip(self.unparsed_schedule_tests,
                                                      range(len(self.unparsed_schedule_tests))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
             if msg == "":
-                TM.Serializability.remove_aborted_tx(parsed)
-                actual, _ = TM.Serializability.is_serializable(parsed)
+                TMSolver.Serializability.remove_aborted_tx(parsed)
+                actual, _ = TMSolver.Serializability.is_serializable(parsed)
                 self.assertEqual(is_serializable, actual, f"Schedule {i}:")
 
     def test_removing_aborted_TM(self):
@@ -107,20 +108,20 @@ class TestTM(ScheduleTest):
         unparsed_schedule = 'r1(x)w2(y)r1(x)w3(z)w3(x)r1(y)w1(y)w2(z)w1(z)w3(y)r2(x)c3r2(y)c2w1(y)a1'
         expected = 'w2(y)w3(z)w3(x)w2(z)w3(y)r2(x)r2(y)'
 
-        parsed, msg = TM.Schedule.parse_schedule(unparsed_schedule)
+        parsed, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
 
-        actual, _ = TM.Serializability.is_serializable(parsed)
+        actual, _ = TMSolver.Serializability.is_serializable(parsed)
         self.assertFalse(actual)
 
-        TM.Serializability.remove_aborted_tx(parsed)
-        expected, msg = TM.Schedule.parse_schedule(expected)
+        TMSolver.Serializability.remove_aborted_tx(parsed)
+        expected, msg = TMBasic.Schedule.parse_schedule(expected)
         self.assertEqual(msg, "")
-        actual, _ = TM.Serializability.is_serializable(expected)
+        actual, _ = TMSolver.Serializability.is_serializable(expected)
         self.assertFalse(actual)
         self.assertEqual(expected.operations, parsed.operations)
 
-        actual, _ = TM.Serializability.is_serializable(parsed)
+        actual, _ = TMSolver.Serializability.is_serializable(parsed)
         self.assertFalse(actual)
 
     def test_reads_from(self):
@@ -128,34 +129,34 @@ class TestTM(ScheduleTest):
         tests reads_from(parsed_schedule, tx1, resource, tx2)
         """
         unparsed_schedule = 'w1(y)r2(y)a1c2'
-        parsed1, msg = TM.Schedule.parse_schedule(unparsed_schedule)
+        parsed1, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertTrue(TM.Recovery.reads_from(parsed1, 2, 'y', 1))
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 1))
 
         unparsed_schedule = 'w1(x)w1(y)r2(u)w2(x)r2(y)r3(x)w2(z)a2r1(z)c1c3'
-        parsed2, msg = TM.Schedule.parse_schedule(unparsed_schedule)
+        parsed2, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertTrue(TM.Recovery.reads_from(parsed2, 3, 'x', 2))
-        self.assertFalse(TM.Recovery.reads_from(parsed2, 3, 'x', 1))
-        self.assertTrue(TM.Recovery.reads_from(parsed2, 2, 'y', 1))
-        self.assertFalse(TM.Recovery.reads_from(parsed2, 1, 'z', 2))
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed2, 3, 'x', 2))
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed2, 3, 'x', 1))
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed2, 2, 'y', 1))
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed2, 1, 'z', 2))
 
         unparsed_schedule = 'w1(y)a1r2(y)c2'
-        parsed1, msg = TM.Schedule.parse_schedule(unparsed_schedule)
+        parsed1, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertFalse(TM.Recovery.reads_from(parsed1, 2, 'y', 1))
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 1))
 
         unparsed_schedule = 'w3(y)w1(y)r2(y)c2a1c3'
-        parsed1, msg = TM.Schedule.parse_schedule(unparsed_schedule)
+        parsed1, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertTrue(TM.Recovery.reads_from(parsed1, 2, 'y', 1))
-        self.assertFalse(TM.Recovery.reads_from(parsed1, 2, 'y', 3))
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 1))
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 3))
 
         unparsed_schedule = 'w3(y)w1(y)a1r2(y)c2c3'
-        parsed1, msg = TM.Schedule.parse_schedule(unparsed_schedule)
+        parsed1, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertFalse(TM.Recovery.reads_from(parsed1, 2, 'y', 1))
-        self.assertTrue(TM.Recovery.reads_from(parsed1, 2, 'y', 3))
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 1))
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 3))
 
     def test_is_recoverable(self):
         """
@@ -163,9 +164,9 @@ class TestTM(ScheduleTest):
         """
         for (schedule, is_recoverable, _, _), i in zip(self.schedule_recoverability_tests,
                                                        range(len(self.schedule_recoverability_tests))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
-            actual, result = TM.Recovery.is_recoverable(parsed)
+            actual, result = TMSolver.Recovery.is_recoverable(parsed)
             # TODO: Check result (i.e., counterexample or proof)
             self.assertEqual(is_recoverable, actual, f"Schedule {i}: {schedule}")
 
@@ -175,9 +176,9 @@ class TestTM(ScheduleTest):
         """
         for (schedule, _, avoids_cascading_aborts, _), i in zip(self.schedule_recoverability_tests,
                                                                 range(len(self.schedule_recoverability_tests))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
-            actual, result = TM.Recovery.avoids_cascading_aborts(parsed)
+            actual, result = TMSolver.Recovery.avoids_cascading_aborts(parsed)
             # TODO: Check result (i.e., counterexample or proof)
             self.assertEqual(avoids_cascading_aborts, actual, f"Schedule {i}: {schedule}")
 
@@ -187,9 +188,9 @@ class TestTM(ScheduleTest):
         """
         for (schedule, _, _, is_strict), i in zip(self.schedule_recoverability_tests,
                                                   range(len(self.schedule_recoverability_tests))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
-            actual, result = TM.Recovery.is_strict(parsed)
+            actual, result = TMSolver.Recovery.is_strict(parsed)
             # TODO: Check result (i.e., counterexample or proof)
             self.assertEqual(is_strict, actual, f"Schedule {i}: {schedule}")
 
@@ -198,9 +199,9 @@ class TestTM(ScheduleTest):
         tests is_2PL(parsed_schedule)
         """
         for (schedule, is2PL, _, _, _), i in zip(self.scheduling_tests, range(len(self.scheduling_tests))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
-            actual, errors = TM.Scheduling.is_2PL(parsed)
+            actual, errors = TMSolver.Scheduling.is_2PL(parsed)
             self.assertEqual(is2PL, actual, f"Schedule {i}: {schedule}\n Error: {errors}")
             self.assertEqual(not errors, is2PL)
             # TODO: Check for correct error messages in case of is2PL == False
@@ -210,9 +211,9 @@ class TestTM(ScheduleTest):
         tests is_C2PL(parsed_schedule)
         """
         for (schedule, _, isC2PL, _, _), i in zip(self.scheduling_tests, range(len(self.scheduling_tests))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
-            actual, errors = TM.Scheduling.is_C2PL(parsed)
+            actual, errors = TMSolver.Scheduling.is_C2PL(parsed)
             self.assertEqual(isC2PL, actual, f"Schedule {i}: {schedule}\n Error: {errors}")
             self.assertEqual(not errors, isC2PL)
             # TODO: Check for correct error messages in case of isC2PL == False
@@ -222,9 +223,9 @@ class TestTM(ScheduleTest):
         tests is_S2PL(parsed_schedule)
         """
         for (schedule, _, _, isS2PL, _), i in zip(self.scheduling_tests, range(len(self.scheduling_tests))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
-            actual, errors = TM.Scheduling.is_S2PL(parsed)
+            actual, errors = TMSolver.Scheduling.is_S2PL(parsed)
             self.assertEqual(isS2PL, actual, f"Schedule {i}: {schedule}\n Error: {errors}")
             # self.assertEqual(not errors, isS2PL)
             # TODO: Check for correct error messages in case of isS2PL == False
@@ -234,9 +235,9 @@ class TestTM(ScheduleTest):
         tests is_SS2PL(parsed_schedule)
         """
         for (schedule, _, _, _, isSS2PL), i in zip(self.scheduling_tests, range(len(self.scheduling_tests))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
-            actual, errors = TM.Scheduling.is_SS2PL(parsed)
+            actual, errors = TMSolver.Scheduling.is_SS2PL(parsed)
             self.assertEqual(isSS2PL, actual, f"Schedule {i}: {schedule}\n Error: {errors}")
             # self.assertEqual(not errors, isSS2PL)
             # TODO: Check for correct error messages in case of isSS2PL == False
@@ -247,9 +248,9 @@ class TestTM(ScheduleTest):
         """
         for (schedule, schedule_mod, result), _i in zip(self.compare_schedules_test,
                                                         range(len(self.compare_schedules_test))):
-            parsed, msg = TM.Schedule.parse_schedule(schedule)
-            parsed_mod, msg_mod = TM.Schedule.parse_schedule(schedule_mod)
-            problems=TM.Scheduling.check_operations_same(parsed, parsed_mod)
+            parsed, msg = TMBasic.Schedule.parse_schedule(schedule)
+            parsed_mod, msg_mod = TMBasic.Schedule.parse_schedule(schedule_mod)
+            problems=TMSolver.Scheduling.check_operations_same(parsed, parsed_mod)
             returned =len(problems)==0 
             self.assertEqual(returned, result)
 
@@ -257,9 +258,9 @@ class TestTM(ScheduleTest):
         """
         test the content of an empty graph
         """
-        g_1 = TM.ConflictGraph("edgeless")
-        t1 = TM.ConflictGraphNode(1)
-        t2 = TM.ConflictGraphNode(2)
+        g_1 = TMBasic.ConflictGraph("edgeless")
+        t1 = TMBasic.ConflictGraphNode(1)
+        t2 = TMBasic.ConflictGraphNode(2)
         self.assertTrue(g_1.isEmpty())
         gvMarkup = g_1.get_graphviz_graph()
         debug = False
