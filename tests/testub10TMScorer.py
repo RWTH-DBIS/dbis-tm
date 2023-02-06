@@ -3,8 +3,8 @@ Created on 2022-07-16
 
 @author: wf
 '''
-from dbisvl.tm.TMCheck import ConflictSetScorer, ConflictSerializationScorer, RecoveryScorer, ScheduleScorer
-from dbisvl.tm.TM import ConflictGraph, ConflictGraphNode
+from assets.TMCheck import ConflictSetScorer, ConflictSerializationScorer, RecoveryScorer, ScheduleScorer
+from assets.TMBasic import ConflictGraph, ConflictGraphNode
 
 from tests.scheduletest import ScheduleTest
 
