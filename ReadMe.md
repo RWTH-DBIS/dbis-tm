@@ -20,6 +20,35 @@ Zu den folgenden Kategorien verfügt das TM Paket auch über 2 Parsing Funktione
 ## Übungsblätter
 Es existiert eine Datei: _Generate_Tasks.py_ welche eine Infrastruktur bereitstellt um Aufgaben für die Übungsblätter zu erstellen. Ein Beispiel der Funktionsweise ist in _playground.py_ hinterlegt. Die erzeugten Schedules müssen dann nur noch in das Übungsblatt eingefügt werden. Es lohnt sich diese Aufgaben an einem Ort abzuspeichern, da die Erzeugung jedes Mal neu passiert und somit keine Aufgabe genauso nochmal erzeugt werden kann. 
 In diesem Datensatz sind auch die Lösungen enthalten, für die Erstellung einer Muserlösung.
+
+*get_tasks()* ginbt eine Liste von Listen zurück. \
+In der **ersten** Liste sind die Aufgaben zur **Serialisierbarkeit**. Die Liste ist folgendermaßen aufgebaut:
+
+    [[Aufgabe-a, Lösung-a], [Aufgabe-b, Lösung-b]]
+- _Aufgabe-a_: [schedule1: String, schedule2: String]
+- _Lösung-a_: [conflictset1: List, conflictset2: List]
+- _Aufgabe-b_: [schedule3: String, conflictset3: List, schedule4: String, conflictset4: List]
+- _Lösung-b_: [serilizability3: bool, graph3: ConflictGraph, serilizability4: bool, graph4: ConflictGraph]\
+
+In der **zweiten** Liste sind die Aufgaben und Lösungen zu **Recovery**:
+
+    [[Aufgabe-a, Lösung-a], [Aufgabe-b, Lösung-b],[Aufgabe-c, Lösung-c]]
+- _Aufgabe-a_: [Klasse: char, schedule1: String]
+- _Lösung-a_: [[in_rc: Bool, in_aca: Bool, in_s: Bool],[proof_rc: List, proof_aca: List, proof_s: List]]
+- _Aufgabe-b_: [Klasse: char, schedule1: String]
+- _Lösung-b_: [[in_rc: Bool, in_aca: Bool, in_s: Bool],[proof_rc: List, proof_aca: List, proof_s: List]]
+- _Aufgabe-c_: [Klasse: char, schedule1: String]
+- _Lösung-c_: [[in_rc: Bool, in_aca: Bool, in_s: Bool],[proof_rc: List, proof_aca: List, proof_s: List]]\
+In der **dritten** Liste sind die Aufgaben und Lösungen zum **Scheduling**:
+
+        [[Aufgabe-a, Lösung-a], [Aufgabe-b, Lösung-b],[Aufgabe-c, Lösung-c]]
+- _Aufgabe-a_: [schedule1: String, klasse: char]
+- _Lösung-a_: [performed-schedule: schedule]
+- _Aufgabe-b_: [schedule1: String, klasse: char]
+- _Lösung-b_: [performed-schedule: schedule]
+- _Aufgabe-c_: [schedule1: String, klasse: char]
+- _Lösung-c_: [performed-schedule: schedule]
+
 ## Klausuraufgaben
 Für Klausuraufgaben ist auch eine Beispielerzeugung in _playground.py_ hinderlegt. Dort wird eine Auswahl an Schedules erzeugt. Diese können in die Dynaxite logik eingefügt werden und somit eine zufälligere Aufgabenverteilung ermöglichen. Es existiert eine Beispielaufgabe in Dynaxite, aber es gibt sicherlich noch mehr Anwendungsmöglichkeiten.
 # 1.Generator
