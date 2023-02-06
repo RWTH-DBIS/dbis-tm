@@ -1,4 +1,5 @@
-from TM import Schedule, Scheduling, Operation, OperationType, ConflictGraph, ConflictGraphNode
+from TMBasic import Schedule, Operation, OperationType, ConflictGraph, ConflictGraphNode
+from TMSolver import Scheduling
 from typing import Union
 from graphviz import Digraph
 import copy 
