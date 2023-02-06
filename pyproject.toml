@@ -4,4 +4,4 @@ pythonpath = [
 ]
 
 [options]
-packages = ["TMBasic"]
+packages = [{include ="TMBasic"}]
