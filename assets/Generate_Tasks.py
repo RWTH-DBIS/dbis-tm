@@ -139,7 +139,7 @@ class Creating:
         solution2 = TM.Schedule.parse_string(solution2)[0]
         solution3 = TM.Schedule.parse_string(solution3)[0]
 
-        return Task([schedule1, schdeules[0]], solution1, [schedule2,schedules[1]], solution2, [schedule3,schedules[2]], solution3)
+        return Task([schedule1, schedules[0]], solution1, [schedule2,schedules[1]], solution2, [schedule3,schedules[2]], solution3)
 
 def get_tasks():
     tasks = Generate_Tasks()
