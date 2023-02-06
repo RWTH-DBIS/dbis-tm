@@ -331,30 +331,24 @@ class Perform_conflictgraph:
         conflict_list = []
         [conflict_list.append(x) for x in conflict_list_dup if x not in conflict_list]
         # compute string
-        conflict_str = "{"
+        conflict = []
         for [k,l] in conflict_list:
-            conflict_str += "(\"" + k.op_type.value + str(k.tx_number) + "(" + k.resource + ")\" ,\"" + l.op_type.value + str(l.tx_number) + "(" + l.resource + ")\"),"
-            # {("w_3(y)", "w_1(y)"), ("w_1(y)", "r_3(y)"), ("w_1(z)", "w_3(z)"), ("w_1(x)", "r_3(x)")}
-        if conflict_str[len(conflict_str)-1:] == ",":
-            conflict_str = conflict_str[:-1]
-        conflict_str +=  "}"
-        return conflict_str, [conflict_list, schedule.tx_count]
+            str1 = k.op_type.value + str(k.tx_number) + "(" + k.resource + ")"
+            str2 =  l.op_type.value + str(l.tx_number) + "(" + l.resource + ")"
+            conflict_tuple =(str1,str2 )
+            conflict.append(conflict_tuple)
+            # [("w_3(y)", "w_1(y)"), ("w_1(y)", "r_3(y)"), ("w_1(z)", "w_3(z)"), ("w_1(x)", "r_3(x)")]
+        return conflict
 
     @classmethod
-    def compute_conflictgraph(cls,conflict_list: list ):
-        trans = conflict_list[1]
-        conflicts_ob = conflict_list[0]
+    def compute_conflictgraph(cls,conflict_list: dict)-> ConflictGraph:
         knots = []
-        for i in range(1,trans+1):
+        for i in range(1,len(conflict_list)+1):
             knots.append(ConflictGraphNode(i))
         graph = ConflictGraph()
-        # extract trans
-        conflicts_dupl = []
-        for i in conflicts_ob:
-            conflicts_dupl.append([i[0].tx_number, i[1].tx_number])
-        # clean
-        conflicts = []
-        [conflicts.append(conf) for conf in conflicts_dupl if conf not in conflicts]
-        for i in conflicts:
-            graph.add_edge(knots[i[0]-1],knots[i[1]-1])
+
+        for i in conflict_list.keys():
+            if conflict_list[i]!= set():
+                for k in conflict_list[i]:
+                    graph.add_edge(knots[i-1],knots[k-1])
         return graph
