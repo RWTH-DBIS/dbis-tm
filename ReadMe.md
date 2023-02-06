@@ -19,6 +19,7 @@ Zu den folgenden Kategorien verfügt das TM Paket auch über 2 Parsing Funktione
 # Aufgabenerstellung
 ## Übungsblätter
 Es existiert eine Datei: _Generate_Tasks.py_ welche eine Infrastruktur bereitstellt um Aufgaben für die Übungsblätter zu erstellen. Ein Beispiel der Funktionsweise ist in _playground.py_ hinterlegt. Die erzeugten Schedules müssen dann nur noch in das Übungsblatt eingefügt werden. Es lohnt sich diese Aufgaben an einem Ort abzuspeichern, da die Erzeugung jedes Mal neu passiert und somit keine Aufgabe genauso nochmal erzeugt werden kann. 
+**Bitte auch auf Textänderungen achten die eventuell entstehen müssen.**
 In diesem Datensatz sind auch die Lösungen enthalten, für die Erstellung einer Muserlösung.
 
 *get_tasks()* ginbt eine Liste von Listen zurück. \
