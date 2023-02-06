@@ -9,7 +9,7 @@ unit-test-3.10:
     stage: test
     script:
         - pip install tox
-        - tox -r -e py311
+        - tox -r -e py310
  
 
 build-3.10:
