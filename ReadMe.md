@@ -16,6 +16,12 @@ Zu den folgenden Kategorien verfügt das TM Paket auch über 2 Parsing Funktione
 - parse_string (cls, schedule: Schedule) -> tuple[str, str]
     - Diese Funktion parsed ein Schedule zu einem String. Gibt gegebenenfalls einen Error-String zurück.
 
+# Aufgabenerstellung
+## Übungsblätter
+Es existiert eine Datei: _Generate_Tasks.py_ welche eine Infrastruktur bereitstellt um Aufgaben für die Übungsblätter zu erstellen. Ein Beispiel der Funktionsweise ist in _playground.py_ hinterlegt. Die erzeugten Schedules müssen dann nur noch in das Übungsblatt eingefügt werden. Es lohnt sich diese Aufgaben an einem Ort abzuspeichern, da die Erzeugung jedes Mal neu passiert und somit keine Aufgabe genauso nochmal erzeugt werden kann. 
+In diesem Datensatz sind auch die Lösungen enthalten, für die Erstellung einer Muserlösung.
+## Klausuraufgaben
+Für Klausuraufgaben ist auch eine Beispielerzeugung in _playground.py_ hinderlegt. Dort wird eine Auswahl an Schedules erzeugt. Diese können in die Dynaxite logik eingefügt werden und somit eine zufälligere Aufgabenverteilung ermöglichen. Es existiert eine Beispielaufgabe in Dynaxite, aber es gibt sicherlich noch mehr Anwendungsmöglichkeiten.
 # 1.Generator
 **Neu**
 Der Generator kann drei unterschiedliche Arten von Schedules erzeugen:
@@ -68,8 +74,10 @@ In der Datei _TM.py_ liegen die Funktionen in der Klasse _Serializability_. Hier
 **Neu:**
 ## Solution_generator.py
 In der Datei _Solution\_generator.py_ sind die Funktionen in der Klasse _Perform\_conflictgraph_. Dort gibt es folgende Funktionen:
-- compute_conflict_quantity (cls, schedule: Schedule) -> str
-    - Erzeugt aus einem gegebenen Schedule eine Konfliktgraphen. Dieser wird nur als String zurückgegeben, angelehnt an der Schreibweise in Doku-Transaktionsmanagement.
+- compute_conflict_quantity (cls, schedule: Schedule) -> list
+    - Erzeugt aus einem gegebenen Schedule eine Konfliktgraphen. Dieser wird nur als Liste zurückgegeben, angelehnt an der Schreibweise in Doku-Transaktionsmanagement.
+- compute_conflictgraph(cls,conflict_list: dict) -> ConflictGraph
+    - Erzeugt den Graph zu einem gegebenem dict ( is_serializable(schedule)[1]). Der Graph kann angezeigt werden mit: graph.get_graphviz_graph().
 
 
 # 3. Recovery
