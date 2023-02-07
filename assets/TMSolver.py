@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import itertools
 import sys
+from asserts.TMBasic import Schedule, OperationType
 from typing import Union
 from graphviz import Digraph
 
