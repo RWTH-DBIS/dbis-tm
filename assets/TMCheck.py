@@ -287,9 +287,9 @@ class Grading:
                 score += points_per_class
 
         return score
-
+        
     @classmethod
-    def grade_conflictsets(cls, schedule: Union[Schedule, str], conflictset, max_score)-> int:
+    def grade_conflictsets(cls, schedule: Union[Schedule, str], solution, max_score)-> int:
         """
         Grading the conflict set task. Compute conflictset from original schedule.
         Check whether the conflict sets are the same. For each wrong entry -0.5 points.
@@ -300,11 +300,15 @@ class Grading:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-        solution = Perform_conflictgraph.compute_conflict_quantity(schedule)
-        for i in solution:
-            if i not in conflictset:
-                error += 1
-        score = max(max_score - (error *0,5),0)
+        conflictset = Perform_conflictgraph.compute_conflict_quantity(schedule)
+        add = max_score /len(conflictset)
+        for i in conflictset:
+            if i in solution:
+                score += add
+            else:
+                score -= add
+        if score < 0:
+            score = 0
         return score
     
     @classmethod
