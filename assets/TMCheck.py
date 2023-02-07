@@ -7,9 +7,10 @@ Created on 2022-07-06
 
 '''
 import re
-from TM import Schedule,Scheduling, Recovery, Serializability
+from assets.TMBasic import Schedule,
+from assets.TMSolver import Scheduling, Recovery, Serializability
 from typing import Union
-from Solution_generator import Perform_conflictgraph
+from assets.Solution_generator import Perform_conflictgraph
 
 class Scorer:
     """
