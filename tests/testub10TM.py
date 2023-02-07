@@ -348,4 +348,8 @@ w_1(y) wu_1(y) c_1"""
             msg=ScheduleCheck.check(index,schedule,result)
             if debug:
                 print(f"{i+1}:{msg}")
-            self.assertTrue(msg is None)
+            self.assertFalse(msg is None)
+
+
+if __name__ == '__main__':
+    unittest.main()
