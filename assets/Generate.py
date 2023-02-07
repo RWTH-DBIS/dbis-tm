@@ -1,4 +1,4 @@
-from TMBasic import Schedule, OperationType, Operation
+from assets.TMBasic import Schedule, OperationType, Operation
 from TMSolver import Recovery
 import random
 import copy
