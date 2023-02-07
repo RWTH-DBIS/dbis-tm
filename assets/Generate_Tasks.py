@@ -1,7 +1,7 @@
-from Generate import generate
-from Solution_generator import Perform_conflictgraph, Perform_scheduling
-from TMBasic import Schedule
-from TMSolver import Serializability, Recovery
+from assets.Generate import generate
+from assets.Solution_generator import Perform_conflictgraph, Perform_scheduling
+from assets.TMBasic import Schedule
+from assets.TMSolver import Serializability, Recovery
 import random
 from IPython.display import display
 
