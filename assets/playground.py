@@ -1,8 +1,8 @@
-from Generate_Tasks import  get_tasks, Creating
-from Generate import generate
-from TMBasic import Schedule
-from TMSolver import Scheduling, Serializability
-from Solution_generator import Perform_scheduling, Perform_conflictgraph
+from assets.Generate_Tasks import  get_tasks, Creating
+from assets.Generate import generate
+from assets.TMBasic import Schedule
+from assets.TMSolver import Scheduling, Serializability
+from assets.Solution_generator import Perform_scheduling, Perform_conflictgraph
 import random
 random.seed(10)
 helper = get_tasks()
