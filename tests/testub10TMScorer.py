@@ -399,5 +399,51 @@ class TestTM(ScheduleTest):
             if debug:
                 print(f"{i+1}: score={score}")
             self.assertEqual(1,score)
-           
+    
+
+    def testGradeConflictsets(self):
+        """
+        Test the grade_conflictsets function.
+        """   
+        examples = [
+            {# all right full points
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [("w2(y)","w3(y)"), ("w3(y)","r2(y)"),("w3(z)","w2(z)"), ("w3(x)","r2(x)")],
+                "points":2
+            },
+            {# 1 missing
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [("w2(y)","w3(y)"), ("w3(y)","r2(y)"), ("w3(x)","r2(x)")],
+                "points":1.5
+            },
+            {# 1 to much
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [("w2(y)","w3(y)"), ("w3(y)","r2(y)"),("w3(z)","w2(z)"), ("w3(x)","r2(x)"),("r1(x)","r1(x)")],
+                "points":1.5
+            },
+            {# no solution
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [],
+                "points":0
+            },
+            {# 1 too much and 1 missing 
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [("w2(y)","w3(y)"), ("w3(y)","r2(y)"),("w3(z)","w2(z)"),("r1(x)","r1(x)")],
+                "points":1
+            },
+            {# full points
+                "schedule":"r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) c_3 r_2(y) c_2 w_1(y) c_1" ,
+                "conflictset": [("r1(x)","w3(x)"), ("w(y)","r1(y)"), ("w2(y)","w1(y)"), ("w2(y)","w3(y)"),("r1(y)","w3(y)"), ("w1(y)","w3(y)"), ("w1(y)","r2(y)"), ("w3(y)","r2(y)"), ("w3(y)","w1(y)"), ("r2(y)","w1(y)"), ("w3(z)","w2(z)"), ("w3(z)","w1(z)"), ("w2(z)","w1(z)")],
+                "points": 2
+            },
+            {# full points
+                "schedule":"r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) c_3 r_2(y) c_2 w_1(y) c_1" ,
+                "conflictset": [("r1(x)","w3(x)"), ("r1(y)","w3(y)"), ("w1(y)","w3(y)"), ("w1(y)","r2(y)"), ("w3(y)","r2(y)"), ("w3(y)","w1(y)"), ("r2(y)","w1(y)"), ("w3(z)","w2(z)"), ("w3(z)","w1(z)"), ("w2(z)","w1(z)")],
+                "points": 20/13
+            },
+
+        ]
+        for i in examples:
+            score = grade_conflictsets(i["schedule"], i["conflictset"],2)
+            self.assertEqual(score, i["points"])
         
