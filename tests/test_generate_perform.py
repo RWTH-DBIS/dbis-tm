@@ -1,5 +1,5 @@
 from assets.TMBasic import Schedule
-from assets.TMSolver import  Recovery, Scheduling
+from assets.TMSolver import  Recovery, Scheduling, Serializability, ConflictGraph
 from assets.Generate import generate
 from assets.Solution_generator import predict_deadlock, Perform_scheduling, Perform_conflictgraph
 from unittest import TestCase
@@ -330,7 +330,7 @@ class TestTM(ScheduleTest):
                                                         range(len(self.compare_schedules_test))):
             parsed, msg = Schedule.parse_schedule(schedule)
             parsed_mod, msg_mod = Schedule.parse_schedule(schedule_mod)
-            problems=Scheduling.check_operations_same(parsed, parsed_mod)
+            problems=Scheduling.is_operations_same(parsed, parsed_mod)
             returned =len(problems)==0 
             self.assertEqual(returned, result)
 
