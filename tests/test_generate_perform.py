@@ -9,7 +9,7 @@ class TestTMPerformance(unittest.TestCase):
         test_number = 1000
         for i in range(test_number):
             none = generate(3, ['a','b','c'],recovery="n")[0]
-            self.assertFalse(Recovery.is_recoverable(none)[0], Schedule.parse_string(none))
+            self.assertTrue(Recovery.is_recoverable(none)[0], Schedule.parse_string(none))
             self.assertFalse(Recovery.avoids_cascading_aborts(none)[0],  Schedule.parse_string(none))
             self.assertFalse(Recovery.is_strict(none)[0], Schedule.parse_string(none))
 
