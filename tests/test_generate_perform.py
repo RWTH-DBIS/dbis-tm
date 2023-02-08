@@ -2,7 +2,7 @@ from assets.TMBasic import Schedule
 from assets.TMSolver import  Recovery, Scheduling
 from assets.Generate import generate
 from assets.Solution_generator import predict_deadlock, Perform_scheduling, Perform_conflictgraph
-import unittest
+import unittest import TestCase
 import time
 
 class Basetest(TestCase):
@@ -430,7 +430,7 @@ w_1(y) wu_1(y) c_1"""
                 print(f"{i+1}:{msg}")
             self.assertTrue(msg is None)
 
-class TestTMPerformance(unittest.TestCase):
+class TestTMPerformance(TestCase):
     def test_generate_recovery(self):
         test_number = 1000
         for i in range(test_number):
