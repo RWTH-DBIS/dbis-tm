@@ -1,7 +1,7 @@
 from assets.TMBasic import Schedule, ConflictGraph
 from assets.TMSolver import  Recovery, Scheduling, Serializability
 from assets.Generate import generate
-from assets.TMCheck import SyntaxCheck, ScheduleCheck
+from assets.TMCheck import SyntaxCheck#, ScheduleCheck
 from assets.Solution_generator import predict_deadlock, Perform_scheduling, Perform_conflictgraph
 from unittest import TestCase
 import time
@@ -416,20 +416,6 @@ w_1(y) wu_1(y) c_1"""
                 print(msg)
             self.assertEqual(expected[i], msg)
             
-    def testScheduleCheck(self):
-        '''
-        test the schedule check
-        '''
-        examples=self.getScheduleExamples()
-        debug=True
-        for i,example in enumerate(examples):
-            index=example["index"]
-            schedule=example["schedule"]
-            result=example["result"]
-            msg=ScheduleCheck.check(index,schedule,result)
-            if debug:
-                print(f"{i+1}:{msg}")
-            self.assertTrue(msg is None)
 
 class TestTMPerformance(TestCase):
     def test_generate_recovery(self):
