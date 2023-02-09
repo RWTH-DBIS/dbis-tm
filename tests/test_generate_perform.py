@@ -347,7 +347,9 @@ class TestTM(ScheduleTest):
         debug = True
         if debug:
             print(gvMarkup)
-        self.assertTrue(""" {graph [label="Conflict Graph edgeless"] }""" in str(gvMarkup))
+        self.assertTrue("""{
+	graph [label="Conflict Graph"]
+}""" in str(gvMarkup))
         g_1.add_edge(t1, t2)
         gvMarkup = g_1.get_graphviz_graph()
         if debug:
