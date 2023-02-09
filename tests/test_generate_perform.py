@@ -387,7 +387,7 @@ class TestTM(ScheduleTest):
         for i, conf in enumerate([s1_conf, s2_conf, conf_err1, conf_err2, conf_err3, conf_err4]):
             msg = SyntaxCheck.check_conf_set_syntax(conf)
             if debug:
-                print(f"{i}:{msg}")
+                print(f"{i}:{msg}","test")
             expected=expectedList[i]
             if isinstance(expected,tuple):
                 expected1,expected2=expected
