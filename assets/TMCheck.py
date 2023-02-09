@@ -66,6 +66,8 @@ class SyntaxCheck:
         Returns:
             msg: None if ok else the problem message
         '''
+        if schedule == "":
+            return "Leerer Schedule kann keine Lösung sein"
         schedule = schedule.replace(" ", "").replace("_", "")
         syntax_pattern = "([rw][lu]?[1-3][(][xyz][)]|[c][1-3])?"
         pcount=re.findall(syntax_pattern, schedule).count('')
