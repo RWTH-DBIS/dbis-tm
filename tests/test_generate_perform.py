@@ -344,7 +344,7 @@ class TestTM(ScheduleTest):
         t2 = ConflictGraphNode(2)
         self.assertTrue(g_1.isEmpty())
         gvMarkup = g_1.get_graphviz_graph()
-        debug = True
+        debug = False
         if debug:
             print(gvMarkup)
         self.assertTrue("""{
@@ -405,9 +405,7 @@ class TestTM(ScheduleTest):
         schedule_3 = "r_1(x) w_2(z) w_3(y) w_2(x) r_3(z) r_1(y) r_2(y) c_1 c_2 c_3"
         schedule_4 = "w2(x)"
         schedule_5 = "rl_1(x) r_1(x) wl_2(z) w_2(z)  wl_3(y) w_3(y) wl_2(x) w_2(x) rl_3(z) r_3(z) wu_3(y) ru_3(z) rl_1(y) r_1(y) ru_1(x) ru_1(y) rl_2(y) r_2(y) wu_2(z) wu_2(x) ru_2(y) c_1 c_2 c_3"
-        schedule_6 = """wl_2(x) rl_2(y) w_2(x) wu_2(x) r_2(y) ru_2(y) c_2 
-wl_1(z) rl_1(x) wl_1(y) w_1(z) wu_1(z) r_1(x) ru_1(x) rl_3(z) wl_3(x) r_3(z) ru_3(z) w_3(x) wu_3(x) c_3 
-w_1(y) wu_1(y) c_1"""
+        schedule_6 = "wl_2(x) rl_2(y) w_2(x) wu_2(x) r_2(y) ru_2(y) c_2 wl_1(z) rl_1(x) wl_1(y) w_1(z) wu_1(z) r_1(x) ru_1(x) rl_3(z) wl_3(x) r_3(z) ru_3(z) w_3(x) wu_3(x) c_3 w_1(y) wu_1(y) c_1"
         schedule_err2 = ""
         expected = [None, None, None, None,None,None,
                     "Leerer Schedule kann keine Lösung sein"]
