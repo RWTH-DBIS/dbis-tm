@@ -446,4 +446,104 @@ class TestTMScorer(ScheduleTest):
         for i in examples:
             score = grade_conflictsets(i["schedule"], i["conflictset"],2)
             self.assertEqual(score, i["points"])
+    
+    def testGradeConflictsets(self):
+        """
+        Test the grade_conflictsets function.
+        """   
+        examples = [
+            {# all right full points
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [("w2(y)","w3(y)"), ("w3(y)","r2(y)"),("w3(z)","w2(z)"), ("w3(x)","r2(x)")],
+                "points":2
+            },
+            {# 1 missing
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [("w2(y)","w3(y)"), ("w3(y)","r2(y)"), ("w3(x)","r2(x)")],
+                "points":1.5
+            },
+            {# 1 to much
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [("w2(y)","w3(y)"), ("w3(y)","r2(y)"),("w3(z)","w2(z)"), ("w3(x)","r2(x)"),("r1(x)","r1(x)")],
+                "points":1.5
+            },
+            {# no solution
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [],
+                "points":0
+            },
+            {# 1 too much and 1 missing 
+                "schedule": "r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) r_2(x) c_3 r_2(y) c_2 w_1(y) a_1",
+                "conflictset": [("w2(y)","w3(y)"), ("w3(y)","r2(y)"),("w3(z)","w2(z)"),("r1(x)","r1(x)")],
+                "points":1
+            },
+            {# full points
+                "schedule":"r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) c_3 r_2(y) c_2 w_1(y) c_1" ,
+                "conflictset": [("r1(x)","w3(x)"), ("w(y)","r1(y)"), ("w2(y)","w1(y)"), ("w2(y)","w3(y)"),("r1(y)","w3(y)"), ("w1(y)","w3(y)"), ("w1(y)","r2(y)"), ("w3(y)","r2(y)"), ("w3(y)","w1(y)"), ("r2(y)","w1(y)"), ("w3(z)","w2(z)"), ("w3(z)","w1(z)"), ("w2(z)","w1(z)")],
+                "points": 2
+            },
+            {# full points
+                "schedule":"r_1(x) w_2(y) r_1(x) w_3(z) w_3(x) r_1(y) w_1(y) w_2(z) w_1(z) w_3(y) c_3 r_2(y) c_2 w_1(y) c_1" ,
+                "conflictset": [("r1(x)","w3(x)"), ("r1(y)","w3(y)"), ("w1(y)","w3(y)"), ("w1(y)","r2(y)"), ("w3(y)","r2(y)"), ("w3(y)","w1(y)"), ("r2(y)","w1(y)"), ("w3(z)","w2(z)"), ("w3(z)","w1(z)"), ("w2(z)","w1(z)")],
+                "points": 20/13
+            },
+
+        ]
+        for i in examples:
+            score = grade_conflictsets(i["schedule"], i["conflictset"],2)
+            self.assertEqual(score, i["points"])
+
+    def testGradeConflictgraph(self):
+        graphRight = ConflictGraph()
+        graphLess = ConflictGraph()
+        graphMuch = ConflictGraph()
+        t1 = ConflictGraphNode(1)
+        t2 = ConflictGraphNode(2)
+        t3 = ConflictGraphNode(3)
+        graphRight.add_edge(t1,t2)
+        graphRight.add_edge(t3,t2)
+        graphRight.add_edge(t2,t1)
         
+        graphLess.add_edge(t1,t2)
+        graphLess.add_edge(t2,t1)
+        
+        graphMuch.add_edge(t1,t2)
+        graphMuch.add_edge(t3,t2)
+        graphMuch.add_edge(t2,t1)
+        graphMuch.add_edge(t3,t1)
+        schedule = "r1(x) w2(x) r3(y) w2(y) w2(z) r1(x) c1 c2 c3"
+        examples = [
+            { # correct
+                "schedule": schedule ,
+                "graph": graphRight,
+                "seri": False,
+                "points": 1
+            },
+            { # seri wrong, graph right
+                "schedule": schedule,
+                "graph": graphRight,
+                "seri": True,
+                "points": 0.5
+            },
+            { # graph one missing, seri right
+                "schedule": schedule,
+                "graph": graphLess,
+                "seri": False, 
+                "points": 0.5
+            },
+            { # graph one too much, seri right
+                "schedule": schedule,
+                "graph": graphMuch,
+                "seri": False,
+                "points": 0
+            },
+            { # both wrong
+                "schedule": schedule,
+                "graph": graphMuch,
+                "seri": True,
+                "points": 0
+            }
+        ]
+        for i in examples:
+            score = grade_conflictgraph(i["schedule"], i["graph"], i["seri"],1)
+            self.assertEqual(score, i["score"])
