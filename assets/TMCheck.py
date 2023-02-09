@@ -10,7 +10,7 @@ import re
 from assets.TMBasic import Schedule
 from assets.TMSolver import Scheduling, Recovery, Serializability
 from typing import Union
-from excmanager.scorer import Scorer, SetScorer
+#from excmanager.scorer import Scorer, SetScorer
 
 class ScheduleCheck:
     '''
