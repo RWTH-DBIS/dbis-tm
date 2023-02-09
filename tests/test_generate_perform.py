@@ -1,4 +1,4 @@
-from assets.TMBasic import Schedule, ConflictGraph
+from assets.TMBasic import Schedule, ConflictGraph, ConflictGraphNode
 from assets.TMSolver import  Recovery, Scheduling, Serializability
 from assets.Generate import generate
 from assets.TMCheck import SyntaxCheck#, ScheduleCheck
