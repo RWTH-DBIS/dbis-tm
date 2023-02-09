@@ -210,34 +210,34 @@ class TestTM(ScheduleTest):
         tests reads_from(parsed_schedule, tx1, resource, tx2)
         """
         unparsed_schedule = 'w1(y)r2(y)a1c2'
-        parsed1, msg = Schedule.parse_schedule(unparsed_schedule)
+        parsed1, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertTrue(Recovery.reads_from(parsed1, 2, 'y', 1))
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 1)[0])
 
         unparsed_schedule = 'w1(x)w1(y)r2(u)w2(x)r2(y)r3(x)w2(z)a2r1(z)c1c3'
-        parsed2, msg = Schedule.parse_schedule(unparsed_schedule)
+        parsed2, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertTrue(Recovery.reads_from(parsed2, 3, 'x', 2))
-        self.assertFalse(Recovery.reads_from(parsed2, 3, 'x', 1))
-        self.assertTrue(Recovery.reads_from(parsed2, 2, 'y', 1))
-        self.assertFalse(Recovery.reads_from(parsed2, 1, 'z', 2))
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed2, 3, 'x', 2)[0])
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed2, 3, 'x', 1)[0])
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed2, 2, 'y', 1)[0])
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed2, 1, 'z', 2)[0])
 
         unparsed_schedule = 'w1(y)a1r2(y)c2'
-        parsed1, msg = Schedule.parse_schedule(unparsed_schedule)
+        parsed1, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertFalse(Recovery.reads_from(parsed1, 2, 'y', 1))
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 1)[0])
 
         unparsed_schedule = 'w3(y)w1(y)r2(y)c2a1c3'
-        parsed1, msg = Schedule.parse_schedule(unparsed_schedule)
+        parsed1, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertTrue(Recovery.reads_from(parsed1, 2, 'y', 1))
-        self.assertFalse(Recovery.reads_from(parsed1, 2, 'y', 3))
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 1)[0])
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 3)[0])
 
         unparsed_schedule = 'w3(y)w1(y)a1r2(y)c2c3'
-        parsed1, msg = Schedule.parse_schedule(unparsed_schedule)
+        parsed1, msg = TMBasic.Schedule.parse_schedule(unparsed_schedule)
         self.assertEqual(msg, "")
-        self.assertFalse(Recovery.reads_from(parsed1, 2, 'y', 1))
-        self.assertTrue(Recovery.reads_from(parsed1, 2, 'y', 3))
+        self.assertFalse(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 1)[0])
+        self.assertTrue(TMSolver.Recovery.reads_from(parsed1, 2, 'y', 3)[0])
 
     def test_is_recoverable(self):
         """
