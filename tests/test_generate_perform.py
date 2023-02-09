@@ -1,7 +1,7 @@
 from assets.TMBasic import Schedule, ConflictGraph
 from assets.TMSolver import  Recovery, Scheduling, Serializability
 from assets.Generate import generate
-from assets.TMCheck import SyntaxCheck
+from assets.TMCheck import SyntaxCheck, ScheduleCheck
 from assets.Solution_generator import predict_deadlock, Perform_scheduling, Perform_conflictgraph
 from unittest import TestCase
 import time
@@ -332,14 +332,14 @@ class TestTM(ScheduleTest):
             parsed, msg = Schedule.parse_schedule(schedule)
             parsed_mod, msg_mod = Schedule.parse_schedule(schedule_mod)
             problems=Scheduling.is_operations_same(parsed, parsed_mod)
-            returned =len(problems)==0 
+           # returned =len(problems)==0 
             self.assertEqual(returned, result)
 
     def testEdgeLessConflictGraph(self):
         """
         test the content of an empty graph
         """
-        g_1 = ConflictGraph("edgeless")
+        g_1 = ConflictGraph()
         t1 = ConflictGraphNode(1)
         t2 = ConflictGraphNode(2)
         self.assertTrue(g_1.isEmpty())
