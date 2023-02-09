@@ -1,9 +1,11 @@
-from assets.TM import Schedule, Recovery, Scheduling
+from assets.TMBasic import Schedule, ConflictGraph
+from assets.TMSolver import  Recovery, Scheduling
 from assets.Generate import generate
 from assets.Solution_generator import predict_deadlock, Perform_scheduling, Perform_conflictgraph
-import unittest
+from unittest import TestCase
+ 
 
-class TestTMPerformance(unittest.TestCase):
+class TestTMPerformance(TestCase):
     def test_generate_recovery(self):
         test_number = 1000
         for i in range(test_number):
@@ -60,6 +62,3 @@ class TestTMPerformance(unittest.TestCase):
         for schedule, cset in conflict_schedules:
             solution = Perform_conflictgraph.compute_conflict_quantity( Schedule.parse_schedule(schedule)[0])
             self.assertEqual(cset, solution,schedule)
-
-if __name__ == '__main__':
-    unittest.main()
