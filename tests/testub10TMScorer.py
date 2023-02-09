@@ -8,7 +8,7 @@ from assets.TMBasic import ConflictGraph, ConflictGraphNode
 
 from tests.scheduletest import ScheduleTest
 
-class TestTM(ScheduleTest):
+class TestTMScorer(ScheduleTest):
     """
     tests for scorers of
     for https://git.rwth-aachen.de/i5/teaching/dbis-digi-2022/-/issues/35
