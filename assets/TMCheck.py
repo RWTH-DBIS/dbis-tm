@@ -197,6 +197,30 @@ class ScoreSchedule(Scorer):
         self.addScore(max_points, check, problems)
         return self.score
     
+class ConflictSetScorer():
+    '''
+    scorer for conflict sets
+    '''
+       
+    def removeBlanks(self,result):
+        '''
+        remove blanks
+        '''
+        resultNoBlanks = {(str1.replace(" ", ""), str2.replace(" ", "")) for (str1, str2) in result}
+        return resultNoBlanks
+ 
+    def score_conflictSet(self,result1,result2,solution1,solution2,max_points):
+        '''
+        score the given result sets against the given solutions
+        '''
+        result1=self.removeBlanks(result1)
+        result2=self.removeBlanks(result2)
+        setScorer1=SetScorer()
+        setScorer2=SetScorer()
+        setScorer1.evaluate_set(result1, solution1, max_points=max_points/2)
+        setScorer2.evaluate_set(result2, solution2, max_points=max_points/2)
+        score=setScorer1.score+setScorer2.score
+        return round(score,2)
     
 class Grading:
     """
