@@ -1,6 +1,7 @@
 from assets.TMBasic import Schedule, ConflictGraph
 from assets.TMSolver import  Recovery, Scheduling, Serializability
 from assets.Generate import generate
+from assets.TMCheck import SyntaxCheck
 from assets.Solution_generator import predict_deadlock, Perform_scheduling, Perform_conflictgraph
 from unittest import TestCase
 import time
