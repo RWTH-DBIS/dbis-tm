@@ -344,7 +344,7 @@ class TestTM(ScheduleTest):
         t2 = ConflictGraphNode(2)
         self.assertTrue(g_1.isEmpty())
         gvMarkup = g_1.get_graphviz_graph()
-        debug = False
+        debug = True
         if debug:
             print(gvMarkup)
         self.assertTrue("""graph [label="Conflict Graph edgeless"]""" in str(gvMarkup))
