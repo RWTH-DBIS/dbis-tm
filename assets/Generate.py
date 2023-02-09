@@ -1,8 +1,9 @@
-from TM import Schedule, OperationType, Recovery, Operation
+from assets.TMBasic import Schedule, OperationType, Operation
+from assets.TMSolver import Recovery
 import random
 import copy
 from typing import Union
-from Solution_generator import predict_deadlock
+from assets.Solution_generator import predict_deadlock
 
 
 def generate (transactions: int, resources: list[str], deadlock = None,  recovery = None)-> tuple[Schedule,str]:

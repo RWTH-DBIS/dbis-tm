@@ -1,11 +1,12 @@
-from Generate_Tasks import  get_tasks, Creating
-from Generate import generate
-from TM import Schedule, Scheduling, Serializability
-from Solution_generator import Perform_scheduling, Perform_conflictgraph
+from assets.Generate_Tasks import  get_tasks, Creating
+from assets.Generate import generate
+from assets.TMBasic import Schedule
+from assets.TMSolver import Scheduling, Serializability
+from assets.Solution_generator import Perform_scheduling, Perform_conflictgraph
 import random
+random.seed(10)
 helper = get_tasks()
 print(helper[0][0],'\n',helper[0][1],'\n','\n',helper[1][0],'\n',helper[1][1],'\n',helper[1][2],'\n','\n',helper[2],'\n')
-# for 1 b auch schedules, erechne alles auf Basis der Schedules
 
 
 
@@ -30,7 +31,7 @@ for i in range (10):
     recovery_list2[1].append(Schedule.parse_string(recovery)[0])
     recovery_list2[2].append(Schedule.parse_string(avoid)[0])
     recovery_list2[3].append(Schedule.parse_string(strict)[0])
-# print(recovery_list2[0],'\n','\n',recovery_list2[1],'\n','\n',recovery_list2[2],'\n','\n',recovery_list2[3])
+print(recovery_list2[0],'\n','\n',recovery_list2[1],'\n','\n',recovery_list2[2],'\n','\n',recovery_list2[3])
 # scheduling 
 schedules = [[],[],[],[],[]]
 for i in range(10):
@@ -48,7 +49,7 @@ for i in range(10):
         schedules[1].append(Schedule.parse_string(ss2pl)[0])
         schedules[2].append(Schedule.parse_string(c2pl)[0])
         schedules[4].append(Schedule.parse_string(schedule)[0])
-# print(schedules[0],'\n','\n',schedules[1],'\n','\n',schedules[2],'\n','\n', schedules[3],'\n','\n', schedules[4])
+print(schedules[0],'\n','\n',schedules[1],'\n','\n',schedules[2],'\n','\n', schedules[3],'\n','\n', schedules[4])
 
 # conflicts
 conflicts = [[],[],[],[] ]# serilaziable, not-seri,conf-graphs(dict), conflict-sets
@@ -60,6 +61,5 @@ for i in range(10):
     else:
         conflicts[1].append(Schedule.parse_string(schedule)[0])
     conflicts[2].append(seri[1])
-    # print(Perform_conflictgraph.compute_conflict_quantity(schedule))
     conflicts[3].append(Perform_conflictgraph.compute_conflictgraph(seri[1]))
-# print(conflicts[0],'\n','\n',conflicts[1],'\n','\n',conflicts[2],'\n','\n', conflicts[3],'\n','\n', )
+print(conflicts[0],'\n','\n',conflicts[1],'\n','\n',conflicts[2],'\n','\n', conflicts[3],'\n','\n', )
