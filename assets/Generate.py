@@ -20,12 +20,10 @@ def generate (transactions: int, resources: list[str], deadlock = None,  recover
     return schedule,""
 
 
-def generate_schedule (transactions: int, resources: list[str], deadlock = None,  recovery = None, short = False)-> Schedule:
+def generate_schedule (transactions: int, resources: list[str], deadlock = None,  recovery = None)-> Schedule:
         case = ''
         if bool(deadlock) and bool(recovery):
             raise ValueError("Not allowed to choose deadlock and recovery.")
-        elif (deadlock and short) or (recovery and short):
-            raise ValueError("Short is not yet working with deadlock or recovery.")
         elif deadlock in [True, False]:
             case = 'deadlock'
         elif recovery in ['r','a','s','n']:
@@ -43,9 +41,6 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
         transl = list([0] for i in range(transactions))
         transl.insert(0, list(range(1,transactions +1)))
 
-        if short:
-            hold = random.choise(transl[0])
-            transl[hold]=[2]
         # deadlock
         locks = [[] for i in range(len(resources))]#[[[op,res,trans]#res a...]...]
         circle = [[] for i in range(transactions)]# [[1 waiting for trans]...], add resources, mabye with dicts
@@ -55,12 +50,6 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
         reads = [[] for i in range(transactions)]# [[1 reads from trans]...]
         not_next = False
         i=1
-        #short
-        if short:
-            short_trans = random.choice(transl[0])
-            transl[short_trans]= [3]
-        else:
-            short_trans = 0
 
         while index > 0 :
             trans = 0
@@ -74,10 +63,7 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
             if trans == 0:
                 #choose random transaction, operation and resource
                 trans = random.choice(transl[0])
-            if short and i ==3 and transl[short_trans]==[3]:
-                trans = short_trans
-
-            # or (trans == short_trans and index > 4)
+            
             if transl[trans][0] == 0 or (len(transl[0]) == 1 and  index > 1) :       # if none performed, if not the last action, but only one operation remains
                 conclude = False
             elif transl[trans][0] >= 4:     # if all performed, must be in this position, so one transaction in not forced to performed till the end by more then 4 times 
@@ -92,9 +78,6 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
                 index, list_write, reads, not_next, transl, commits, aborts, op, trans, res = generate_recovery(transactions, resources, operation_ch, recovery,  index, i, list_write, reads, not_next, transl,  trans, conclude, commits, aborts, operations)
                 
             else:
-                if short and trans == hold and len(transl[0])>1:
-                    conclude = False
-
                 if conclude:    # add an abort/commit
                     if bool(random.choice([0,1])):
                         aborts[trans]= i
