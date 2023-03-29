@@ -248,7 +248,7 @@ class TestTM(ScheduleTest):
                                                         range(len(self.compare_schedules_test))):
             parsed, msg = Schedule.parse_schedule(schedule)
             parsed_mod, msg_mod = Schedule.parse_schedule(schedule_mod)
-            returned=Scheduling.is_operations_same(parsed, parsed_mod)
+            returned=Schedule.is_operations_same(parsed, parsed_mod)
            # returned =len(problems)==0 
             self.assertEqual(returned, result)
 
