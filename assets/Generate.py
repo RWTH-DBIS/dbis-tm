@@ -1,9 +1,9 @@
-from assets.TMBasic import Schedule, OperationType, Operation
-from assets.TMSolver import Recovery
+from  TMBasic import Schedule, OperationType, Operation
+from  TMSolver import Recovery
 import random
 import copy
 from typing import Union
-from assets.Solution_generator import predict_deadlock
+from  Solution_generator import predict_deadlock
 
 
 def generate (transactions: int, resources: list[str], deadlock = None,  recovery = None)-> tuple[Schedule,str]:
@@ -15,7 +15,7 @@ def generate (transactions: int, resources: list[str], deadlock = None,  recover
                 break
             schedule = generate_schedule(transactions, resources, deadlock)
             schedule_test = copy.deepcopy(schedule)
-        if not predict_deadlock(schedule_test):
+        if predict_deadlock(schedule_test):
             return schedule, "Please try again."
     return schedule,""
 
@@ -28,7 +28,8 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
             case = 'deadlock'
         elif recovery in ['r','a','s','n']:
             case = 'recovery'
-        
+        #check_res
+        check_res = [0] * len(resources)
         # initiate schedule parts 
         operations = []
         aborts= dict()
@@ -97,12 +98,14 @@ def generate_schedule (transactions: int, resources: list[str], deadlock = None,
             elif trans<0: # conclude
                 trans = trans*(-1)
             else:
+                check_res[resources.index(res)]=1
                 gen_op = Operation(op,trans,res,i)
                 operations.append(gen_op)
             
             index -= 1
             i+=1
-        schedule = Schedule(operations, resources, transactions, aborts, commits)
+        resources_clean = [name for name in resources if check_res[resources.index(name)]==1]
+        schedule = Schedule(operations, resources_clean, transactions, aborts, commits)
         return schedule
         
 def generate_recovery (transactions:int, resources: list[str], operation_ch:list, recovery: str,  index: int, i: int, list_write: list, reads: list, not_next:bool, transl: list,  trans:int, conclude: bool, commits, aborts, operations)-> tuple[int, list, list, bool, list, dict, dict, OperationType, int, str]:

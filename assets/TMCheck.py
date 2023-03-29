@@ -7,10 +7,11 @@ Created on 2022-07-06
 
 '''
 import re
-from assets.TMBasic import Schedule
-from assets.TMSolver import Scheduling, Recovery, Serializability
+from TMBasic import Schedule
+from TMSolver import Scheduling, Recovery, Serializability
+from Solution_generator import Perform_conflictgraph
 from typing import Union
-#from excmanager.scorer import Scorer, SetScorer
+from excmanager.scorer import Scorer, SetScorer
 
 class ScheduleCheck:
     '''
@@ -51,9 +52,9 @@ class ScheduleCheck:
             True if no errors occur
         """
         sameProblemCount = 0
-        problems=Scheduling.check_operations_same(original, schedule)
-        if len(problems)>0:
-            self.feedback(f"schedule has {len(problems)}: {problems}",False)
+        problems=Schedule.is_operations_same(original, schedule)
+        if not problems:
+            self.feedback(f"schedule has not the same operations as the original.",False)
             sameProblemCount+=1
         else:
             self.feedback("schedule covers all operations",True)
@@ -90,7 +91,7 @@ class SyntaxCheck:
             msg: None if ok else the problem message
         """
         schedule=Schedule.sanitize(schedule)
-        syntax_pattern = "([rw][lu]?[1-3][(][xyz][)]|[c][1-3])?"
+        syntax_pattern = "([rw][lu]?[1-3][(][a-z][)]|[c][1-3])?"
         p_count = re.findall(syntax_pattern, schedule).count('')
         msg = None
         if schedule=="":
@@ -100,7 +101,7 @@ class SyntaxCheck:
         return msg
 
     @classmethod
-    def check_conf_set_syntax(cls, conf_set: set[tuple[str, str]]) -> str:
+    def check_conf_set_syntax(cls, conf_set: list[tuple[str, str]]) -> str:
         """
         Check syntax of strings in tuple that denotes conflicting operations.
 
@@ -108,9 +109,9 @@ class SyntaxCheck:
             None if input is formatted according to pattern
             or an error message in case a tuple is formatted incorrectly
         """
-        tuple_pattern = "[rw]_[1-3][(][xyz][)]"
-        if not isinstance(conf_set, set):
-            return f"{conf_set} ist kein Set"
+        tuple_pattern = "[rw][1-3][(][a-z][)]"
+        if not isinstance(conf_set, list):
+            return f"{conf_set} ist keine Liste"
         for t in conf_set:
             if not len(t)==2:
                 return f"Das Tupel {t} von {conf_set} ist kein Paar"
@@ -121,7 +122,7 @@ class SyntaxCheck:
 
 class ScheduleScorer(Scorer):
     """
-    Class to score schedules
+    Class to score scheduling
     """
 
     def __init__(self, debug: bool = False):
@@ -189,12 +190,14 @@ class ConflictSetScorer():
         resultNoBlanks = {(str1.replace(" ", ""), str2.replace(" ", "")) for (str1, str2) in result}
         return resultNoBlanks
  
-    def score_conflictSet(self,result1,result2,solution1,solution2,max_points):
+    def score_conflictSet(self,result1,result2,schedule1,schedule2,max_points):
         '''
         score the given result sets against the given solutions
         '''
         result1=self.removeBlanks(result1)
         result2=self.removeBlanks(result2)
+        solution1=Perform_conflictgraph.compute_conflict_quantity(schedule1)
+        solution2=Perform_conflictgraph.compute_conflict_quantity(schedule2)
         setScorer1=SetScorer()
         setScorer2=SetScorer()
         setScorer1.evaluate_set(result1, solution1, max_points=max_points/2)
@@ -207,21 +210,29 @@ class ConflictSerializationScorer(Scorer):
     a scorer for conflict serialization tasks
     '''
     
-    def score_conflictSerialization(self,name,cgresult,serializableResult,cgsolution,serializable):
+    def score_conflictSerialization(self,name,cgresult,serializableResult,schedule, max_points):
         '''
         score a conflict serialization answer
         '''
-        serializableCheck=f"check that your result for serializable of {name} {serializableResult} = correct solution serializable {serializable}"
+        points_seri = 0.5
+        points_graph = max_points-points_seri
+        if points_graph>=0:
+            points_seri = max_points/2
+            points_graph = max_points/2
+        serializable = Serializability.is_serializable(schedule)
+        cgsolution = Perform_conflictgraph.compute_conflictgraph(serializable[1])
+        
+        serializableCheck=f"check that your result for serializable of {name} {serializableResult} = correct solution serializable {serializable[0]}"
         serializableProblem=None
-        if serializableResult != serializable:
+        if serializableResult != serializable[0]:
             serializableProblem=""
-        self.addScore(0.5, serializableCheck, serializableProblem)
+        self.addScore(points_seri, serializableCheck, serializableProblem)
         expectedGraph=str(cgsolution.digraph)
         conflictGraphCheck=f"check that conflictGraph is '''{expectedGraph}'''"
         conflictGraphProblem=None
         if cgresult!=cgsolution:
             conflictGraphProblem=f"{str(cgresult.digraph)} is different"
-        self.addScore(1,conflictGraphCheck,conflictGraphProblem)
+        self.addScore(points_graph,conflictGraphCheck,conflictGraphProblem)
         return self.score
     
 class RecoveryScorer(Scorer):
@@ -275,10 +286,19 @@ class RecoveryScorer(Scorer):
         # positive Proof
         if isClassSolution:
             check=f"{name} is {proofName} with expected proof {proofClassSolution}"
-            if isClassSolution == isClass and proofClass == proofClassSolution:
+            #check sets:
+            errors1 = []
+            errors2 = []
+            for i in proofClassSolution:
+                if i not in proofClass:
+                    errors1.append(i)
+            for j in proofClass:
+                if j not in proofClassSolution:
+                    errors2.append(j)
+            if isClassSolution == isClass and len(errors1)==0==len(errors2):
                 pass
             else:
-                problem=f"{proofClass}"
+                problem=f"Missing tuples: {errors1},wrong tuples: {errors2}"
             self.addScore(self.points_per_class, check, problem)
         else:
             check=f"{name} is not {proofName} with expected proof {proofClassSolution}"
@@ -328,72 +348,4 @@ class RecoveryScorer(Scorer):
         self.score_proof(name, "ST", is_st, proof_st, is_st_solution, proof_st_solution)
         return self.score
 
-class SerializabilityScorer(Scorer):
-    '''# Musterlösung Ü10.md
-    class to score serilizability
-    '''
-    def removeBlanksAndUnderScores(self,proof:list):
-        '''
-        sanitize the given conflict list
-        
-        Args:
-            conflict list: the set to sanitize
-        Return:
-            set: set with no _ or blank in notation 
-        '''
-        proofResult=[]
-        # loop over the tuples
-        for (t,k) in proof:
-            t.replace(" ","")
-            t.replace("_","")
-            k.replace(" ","")
-            k.replace("_","")
-            sober = (t,k)
-            proofResult.add(sober)
-        return proofResult
 
-    def score_conflictsets(cls, schedule: Union[Schedule, str], solution, max_score)-> int:
-        """
-        Grading the conflict set task. Compute conflictset from original schedule.
-        Check whether the conflict sets are the same. For each wrong entry -0.5 points.
-        """
-        solution = self.removeBlanksAndUnderScores(solution)
-        score = 0
-        error = 0
-        if isinstance(schedule, str):
-            schedule = Schedule.parse_schedule(schedule)
-            assert not schedule[1]
-            schedule = schedule[0]
-        conflictset = Perform_conflictgraph.compute_conflict_quantity(schedule)
-        add = max_score /len(conflictset)
-        for i in conflictset:
-            if i in solution:
-                score += add
-            else:
-                score -= add
-        if score < 0:
-            score = 0
-        return score
-    
-    @classmethod
-    def score_conflictgraph(cls,  schedule: Union[Schedule, str], conflictgraph, is_serializable:bool, max_score)-> int:
-        """
-        Grading the conflict graph task. Compute serilizability from original schedule.
-        If right value 0.6 points.
-        Then compute conflict graph and check for equality of both. If equal points,
-        otherwise none.
-        """
-        score = 0
-        error = 0
-        if isinstance(schedule, str):
-            schedule = Schedule.parse_schedule(schedule)
-            assert not schedule[1]
-            schedule = schedule[0]
-
-        solution = Serializability.is_serializable(schedule)
-        if is_serializable == solution[0]:
-            score += 0.5
-        graph_solution = Perform_conflictgraph.compute_conflictgraph(solution[1])
-        if conflictgraph.__eq__(graph_solution):
-            score += max_score-0.5
-        return score

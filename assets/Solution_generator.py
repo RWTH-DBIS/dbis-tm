@@ -1,5 +1,5 @@
-from assets.TMBasic import Schedule, Operation, OperationType, ConflictGraph, ConflictGraphNode
-from assets.TMSolver import Scheduling
+from TMBasic import Schedule, Operation, OperationType, ConflictGraph, ConflictGraphNode
+from TMSolver import Scheduling
 from typing import Union
 from graphviz import Digraph
 import copy 
@@ -98,8 +98,8 @@ class Perform_scheduling:
                 el = 0
             if len(schedule.operations) == 0:
                 break
-
-        if len(operations)+len(commits)+len(aborts) != len_operations*3+schedule.tx_count:
+        all_op = list(filter(lambda op: op.op_type.value in ['r','w'],operations))
+        if len(all_op)+len(commits)+len(aborts) != len_operations+schedule.tx_count:
             return   Schedule(operations, schedule.resources, schedule.tx_count, aborts, commits), "Deadlock occured"
         return Schedule(operations, schedule.resources, schedule.tx_count, aborts, commits),""
     
@@ -118,7 +118,6 @@ class Perform_scheduling:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-        
         schedule = copy.deepcopy(schedule)
         len_operations = len(schedule.operations)
         operations = []
@@ -175,7 +174,8 @@ class Perform_scheduling:
             if len (schedule.operations) == 0:
                 break
 
-        if len(operations)+len(commits)+len(aborts) != len_operations*3+schedule.tx_count:
+        all_op = list(filter(lambda op: op.op_type.value in ['r','w'],operations)) 
+        if len(all_op)+len(commits)+len(aborts) != len_operations+schedule.tx_count:
             return   Schedule(operations, schedule.resources, schedule.tx_count, aborts, commits), "Deadlock occured"
         return Schedule(operations, schedule.resources, schedule.tx_count, aborts, commits),""
     
@@ -229,13 +229,12 @@ class Perform_scheduling:
             
             if op_waiting:
                 try_next_time.append(j)
-
             elif not first:# first action of this trans
                 all_op = list(filter(lambda op: op.tx_number == cur_trans, schedule.operations))
                 write_need =  list(set([op.resource for op in all_op if op.op_type.value == "w"]))
                 read_need =  list(set([op.resource for op in all_op if op.op_type.value == "r"]))
                 locks = list(set(read_lock + write_lock))
-                if [res for res in write_need if res in locks] and [res for res in read_need if res in write_lock]: # w mit r&w checken, r mit w checken
+                if [res for res in write_need if res in locks] or [res for res in read_need if res in write_lock]: # w mit r&w checken, r mit w checken
                     try_next_time.append(j)
                 else: # perform locks
                     for l in all_op:
@@ -243,7 +242,7 @@ class Perform_scheduling:
                         if not locked:
                             operations.append(Operation(OperationType(l.op_type.value+"l"), l.tx_number, l.resource, counter))
                             counter+=1
-                    operations.append(Operation(OperationType(l.op_type.value),l.tx_number,l.resource, counter))
+                    operations.append(Operation(OperationType(cur_op),cur_trans,cur_res, counter))
                     counter+=1
                     transl[cur_trans-1]-=1
 
@@ -286,7 +285,7 @@ class Perform_scheduling:
 def predict_deadlock(schedule: Union[Schedule, str])-> bool:
     #can only perform 2SSPL if no deadlock occurs
     x, is_deadlock = Perform_scheduling.perform_SS2PL(schedule)
-    if is_deadlock:
+    if is_deadlock != '':
         return True
     return False
 

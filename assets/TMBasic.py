@@ -218,7 +218,51 @@ class Schedule:
                 else:
                     return schedule_str, "The index: "+str(i)+ "is not given."
         return schedule_str, "" 
+    
+    @classmethod
+    def is_operations_same(cls, schedule: Union[Schedule, str], mod_schedule: Union[Schedule, str]) -> bool:
+        """
+        Checks whether the two  given schedules do have the same operations.
 
+        Gets:
+            schedule: 'original' schedule (without locks and unlocks)
+            schedule_mod: modified schedule (with locks and unlocks)
+
+        Returns:
+            True if those schedules are the same
+            False otherwise
+        """
+        if isinstance(schedule, str):
+            schedule = Schedule.parse_schedule(schedule)
+            assert not schedule[1]
+            schedule = schedule[0]
+        if isinstance(mod_schedule, str):
+            mod_schedule = Schedule.parse_schedule(mod_schedule)
+            assert not mod_schedule[1]
+            mod_schedule = mod_schedule[0]
+            
+            
+        org_operations = list(filter(
+            lambda op: op.op_type in [OperationType.READ, OperationType.WRITE], mod_schedule.operations))
+        for x in org_operations:
+            if x in schedule.operations:
+                continue
+            else:
+                return False
+        for y in schedule.operations:
+            if y in org_operations:
+                continue
+            else:
+                return False
+        for i in range(1, schedule.tx_count + 1):
+            trans_op_mod = list(filter(
+                lambda op: op.op_type in [OperationType.READ, OperationType.WRITE] and op.tx_number == i,
+                mod_schedule.operations))
+            trans_op_org = list(filter(
+                lambda op: op.tx_number == i, schedule.operations))
+            if not (trans_op_mod == trans_op_org):
+                return False
+        return True
         
 class ConflictGraph:
     """

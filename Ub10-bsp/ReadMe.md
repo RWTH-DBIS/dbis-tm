@@ -1,5 +1,7 @@
-**This fiel is not tested. It could still include spelling errors or wrong brackets.**
-It includes (hopefully) all changes made for serialzability.
+**Before publishing the exercise sheet please test with all solutions whether the full points can be reached.**
 
-## Nict to have:
+## Nice to have:
 - Append the deadlock function to automate/ change the questions about deadlocks.
+
+## ToDo:
+Change deadlock commits. This is still by hand but no evaluation exists. (Maybe look in old exercise sheet.)

@@ -1,7 +1,7 @@
-from assets.Generate import generate
-from assets.Solution_generator import Perform_conflictgraph, Perform_scheduling
-from assets.TMBasic import Schedule
-from assets.TMSolver import Serializability, Recovery
+from  Generate import generate
+from  Solution_generator import Perform_conflictgraph, Perform_scheduling, predict_deadlock
+from  TMBasic import Schedule
+from  TMSolver import Serializability, Recovery
 import random
 from IPython.display import display
 
@@ -129,8 +129,9 @@ class Creating:
             if schedule3[1]=="":
                 break
         schedule3 = schedule3[0]
-
-        solution1 =  Perform_scheduling.perform_SS2PL(schedule1)[0]
+        if Perform_scheduling.perform_SS2PL(schedule1)[1]!="" or Perform_scheduling.perform_S2PL(schedule3)[1]!="":
+            raise Exception( 'A deadlock occured, please try again.' )
+        solution1 = Perform_scheduling.perform_SS2PL(schedule1)[0]
         solution2 = Perform_scheduling.perform_C2PL(schedule2)
         solution3 = Perform_scheduling.perform_S2PL(schedule3)[0]
         schedule1 = Schedule.parse_string(schedule1)[0]
@@ -139,7 +140,6 @@ class Creating:
         solution1 = Schedule.parse_string(solution1)[0]
         solution2 = Schedule.parse_string(solution2)[0]
         solution3 = Schedule.parse_string(solution3)[0]
-
         return Task([schedule1, schedules[0]], solution1, [schedule2,schedules[1]], solution2, [schedule3,schedules[2]], solution3)
 
 def get_tasks():
