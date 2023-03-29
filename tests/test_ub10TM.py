@@ -5,7 +5,7 @@ Created 2022-05
 @author: Marc
 @author: Wolfgang
 """
-from assets.TMBasic import Schedule, ConflictGraph, ConflictGraphNode
+from assets.assets.TMBasic import Schedule, ConflictGraph, ConflictGraphNode
 from assets.TMSolver import  Recovery, Scheduling, Serializability
 #from assets.TMCheck import SyntaxCheck, ScheduleCheck
 from tests.scheduletest import ScheduleTest

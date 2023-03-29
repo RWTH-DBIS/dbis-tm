@@ -1,5 +1,5 @@
-from TMBasic import Schedule, Operation, OperationType, ConflictGraph, ConflictGraphNode
-from TMSolver import Scheduling
+from assets.TMBasic import Schedule, Operation, OperationType, ConflictGraph, ConflictGraphNode
+from assets.TMSolver import Scheduling
 from typing import Union
 from graphviz import Digraph
 import copy 

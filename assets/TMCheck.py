@@ -7,8 +7,8 @@ Created on 2022-07-06
 
 '''
 import re
-from TMBasic import Schedule
-from TMSolver import Scheduling, Recovery, Serializability
+from assets.TMBasic import Schedule
+from assets.TMSolver import Scheduling, Recovery, Serializability
 from Solution_generator import Perform_conflictgraph
 from typing import Union
 from excmanager.scorer import Scorer, SetScorer
