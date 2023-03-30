@@ -202,7 +202,7 @@ class ConflictSetScorer():
         solution2=Perform_conflictgraph.compute_conflict_quantity(schedule2)
         setScorer2=SetScorer()
         setScorer2.evaluate_set(result2, solution2, max_points=max_points/2)
-        score=setScorer1.score+setScore2.score
+        score=setScorer1.score+setScorer2.score
         return round(score,2)
     
 class ConflictSerializationScorer(Scorer):
@@ -216,7 +216,7 @@ class ConflictSerializationScorer(Scorer):
         '''
         points_seri = 0.5
         points_graph = max_points-points_seri
-        if points_graph>=0:
+        if points_graph<=0:
             points_seri = max_points/2
             points_graph = max_points/2
         serializable = Serializability.is_serializable(schedule)

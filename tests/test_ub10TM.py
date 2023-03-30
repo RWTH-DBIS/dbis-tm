@@ -299,7 +299,7 @@ class TestTM(ScheduleTest):
         conf_err4 = [("a"), ("b", "c", "e")]
         debug = True
         expectedList = [None, None, "{} ist keine Liste", None, "Garbage ist keine Liste",
-                    ("Das Tupel ('b', 'c', 'e') von {('b', 'c', 'e'), 'a'}  hat keine korrekte Syntax","Das Tupel a von {'a', ('b', 'c', 'e')}  hat keine korrekte Syntax")]
+                    ("Das Tupel ('b', 'c', 'e') von [('b', 'c', 'e'), 'a']  hat keine korrekte Syntax","Das Tupel a von ['a', ('b', 'c', 'e')]  hat keine korrekte Syntax")]
         for i, conf in enumerate([s1_conf, s2_conf, conf_err1, conf_err2, conf_err3, conf_err4]):
             msg = SyntaxCheck.check_conf_set_syntax(conf)
             if debug:
