@@ -37,9 +37,10 @@ class TestTMScorer(ScheduleTest):
             "expected":4.0
         }
         ]
-        solution1 = {("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")}
-        solution2 = {("r_2(x)", "w_3(x)"), ("w_1(y)", "r_2(y)"), ("w_1(y)", "w_2(y)"), ("w_1(y)", "w_3(y)"), ("w_3(z)", "w_1(z)"), ("w_3(z)", "w_2(z)"), ("r_2(y)", "w_3(y)"), 
-             ("w_2(y)", "w_3(y)"), ("w_2(y)", "r_1(y)"), ("w_1(z)", "w_2(z)"), ("w_3(y)", "r_1(y)"), ("w_3(y)", "w_2(y)"), ("r_1(y)", "w_2(y)")}
+        solution1 = "w2(x) r2(x) w1(z) r1(x) w3(y) a3 w2(z) c1 c2 "#{("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")}
+        solution2 = "r2(x) w3(x) w1(y) r2(y) w2(y) w3(y) w3(z) w1(z) w2(z) r1(y) w2(y)"
+        #{("r_2(x)", "w_3(x)"),- ("w_1(y)", "r_2(y)"), ("w_1(y)", "w_2(y)"), ("w_1(y)", "w_3(y)"),- ("w_3(z)", "w_1(z)"), ("w_3(z)", "w_2(z)"), ("r_2(y)", "w_3(y)"), 
+            #  ("w_2(y)", "w_3(y)"), ("w_2(y)", "r_1(y)"), ("w_1(z)", "w_2(z)"), ("w_3(y)", "r_1(y)"), ("w_3(y)", "w_2(y)"), ("r_1(y)", "w_2(y)")}
         max_points=4
         debug=False
         for i,example in enumerate(examples):
@@ -50,32 +51,12 @@ class TestTMScorer(ScheduleTest):
             score=css.score_conflictSet(result1, result2, solution1, solution2, max_points)
             if debug:
                 print(f"{i+1} score: {score} expected: {expected}")
-            self.assertEquals(expected,score)
+            self.assertEqual(expected,score)
             
     def testConflictSerializationScorer(self):
         '''
         test conflict serialization scoring
         '''
-        
-        graphRight = ConflictGraph()
-        graphLess = ConflictGraph()
-        graphMuch = ConflictGraph()
-        t1 = ConflictGraphNode(1)
-        t2 = ConflictGraphNode(2)
-        t3 = ConflictGraphNode(3)
-        graphRight.add_edge(t1,t2)
-        graphRight.add_edge(t3,t2)
-        graphRight.add_edge(t2,t1)
-        
-        graphLess.add_edge(t1,t2)
-        graphLess.add_edge(t2,t1)
-        
-        graphMuch.add_edge(t1,t2)
-        graphMuch.add_edge(t3,t2)
-        graphMuch.add_edge(t2,t1)
-        graphMuch.add_edge(t3,t1)
-        schedule = "r1(x) w2(x) r3(y) w2(y) w2(z) r1(x) c1 c2 c3"
-        
         schedule1= "r1(x) w2(x) w3(x) w2(y) w3(y) r1(y) w3(z) r1(z) w2(z) c1 c2 c3"
         schedule2 = "w1(x) w3(x) w3(y) w1(y) c1 c2"
         t1 = ConflictGraphNode(1)
@@ -122,15 +103,16 @@ class TestTMScorer(ScheduleTest):
         for i,example in enumerate(examples):
             name=example["name"]
             result=example["result"]
-            cgsolution=example["schedule"]
+            schedule=example["schedule"]
             expected=example["expected"]
+            serializableResult=example["serializable"]
             
             css=ConflictSerializationScorer()
-            score=css.score_conflictSerialization(name,result, serializableResult, cgsolution=cgsolution, serializable=False)
+            score=css.score_conflictSerialization(name,result, serializableResult, schedule, 1.5)
             print(score)
             if debug:
                 print(f"{i+1} score: {score} expected: {expected}")
-            self.assertEquals(expected,score)
+            self.assertEqual(expected,score)
             
     def testRecoveryScorer(self):
         '''
@@ -291,7 +273,7 @@ class TestTMScorer(ScheduleTest):
             
             if debug:
                 print(f"{i+1} score: {score} expected: {expected}")
-            self.assertEquals(expected,score)
+            self.assertEqual(expected,score)
       
     def testScheduleScorer(self):
         '''

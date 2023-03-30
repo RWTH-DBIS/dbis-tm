@@ -325,7 +325,7 @@ class TestTM(ScheduleTest):
         schedule_err2 = ""
         expected = [None, None, None, None,None,None,
                     "Leerer Schedule kann keine Lösung sein"]
-        debug = True
+        debug = False
         for i, schedule in enumerate([schedule_1, schedule_2, schedule_3, schedule_4, schedule_5,schedule_6,schedule_err2]):
             msg = SyntaxCheck.check_schedule_syntax(schedule)
             if debug:

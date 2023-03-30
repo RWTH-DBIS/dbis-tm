@@ -109,7 +109,7 @@ class SyntaxCheck:
             None if input is formatted according to pattern
             or an error message in case a tuple is formatted incorrectly
         """
-        tuple_pattern = "[rw][1-3][(][a-z][)]"
+        tuple_pattern = "[rw][1-3][(][a-z][)]|[rw]_[1-3][(][a-z][)]"
         if not isinstance(conf_set, list):
             return f"{conf_set} ist keine Liste"
         for t in conf_set:
