@@ -107,6 +107,7 @@ class TestTMScorer(ScheduleTest):
             
             css=ConflictSerializationScorer()
             score=css.score_conflictSerialization(name,result, serializableResult, cgsolution=cgsolution, serializable=False)
+            print(score)
             if debug:
                 print(f"{i+1} score: {score} expected: {expected}")
             self.assertEquals(expected,score)
@@ -289,7 +290,6 @@ class TestTMScorer(ScheduleTest):
                 print(f"{i+1}: score={score}")
             self.assertEqual(1,score)
     
-
     def testConflictSetScorer(self):
         """
         Test the grade_conflictsets function.
