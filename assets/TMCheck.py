@@ -117,7 +117,7 @@ class SyntaxCheck:
                 return f"Das Tupel {t} von {conf_set} ist kein Paar"
             for s in sorted(list(t)):
                 if not re.match(tuple_pattern, s):
-                    return f"Das Tupel {t} von {conf_set}  hat keine korrekte Syntax"
+                    return f"Das Tupel {t} von {conf_set} hat keine korrekte Syntax"
         return None
 
 class ScheduleScorer(Scorer):
