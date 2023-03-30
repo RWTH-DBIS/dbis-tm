@@ -1,4 +1,4 @@
-from assets.TMBasic import Schedule, Operation, OperationType, ConflictGraph, ConflictGraphNode
+from assets.TM import Schedule, Operation, OperationType, ConflictGraph, ConflictGraphNode
 from typing import Union
 from graphviz import Digraph
 import copy 

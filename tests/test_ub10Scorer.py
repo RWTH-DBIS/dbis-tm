@@ -4,7 +4,7 @@ Created on 2022-07-16
 @author: wf
 '''
 from assets.TMCheck import ConflictSetScorer, ConflictSerializationScorer, RecoveryScorer, ScheduleScorer
-from assets.TMBasic import ConflictGraph, ConflictGraphNode
+from assets.TM import ConflictGraph, ConflictGraphNode
 from tests.scheduletest import ScheduleTest
 
 class TestTMScorer(ScheduleTest):

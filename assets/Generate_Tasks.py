@@ -1,6 +1,6 @@
 from assets.Generate import generate
 from assets.Solution_generator import Perform_conflictgraph, Perform_scheduling, predict_deadlock
-from  assets.TMBasic import Schedule
+from  assets.TM import Schedule
 from assets.TMSolver import Serializability, Recovery
 import random
 from IPython.display import display

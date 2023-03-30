@@ -1,6 +1,6 @@
 from Generate_Tasks import  get_tasks, Creating
 from assets.Generate import generate
-from  assets.TMBasic import Schedule
+from  assets.TM import Schedule
 from assets.TMSolver import Scheduling, Serializability
 from assets.Solution_generator import Perform_scheduling, Perform_conflictgraph
 import random

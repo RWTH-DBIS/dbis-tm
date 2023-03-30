@@ -1,4 +1,4 @@
-from assets.TMBasic import Schedule, ConflictGraph
+from assets.TM import Schedule, ConflictGraph
 from assets.TMSolver import  Recovery, Scheduling
 from assets.Generate import generate
 from assets.Solution_generator import predict_deadlock, Perform_scheduling, Perform_conflictgraph
