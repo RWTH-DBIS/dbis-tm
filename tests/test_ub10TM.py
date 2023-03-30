@@ -300,8 +300,8 @@ class TestTM(ScheduleTest):
         conf_err5 = [("a_3(x)","b")]
         debug = True
         expectedList = [None, None, "{} ist keine Liste", None, "Garbage ist keine Liste",
-                    ("Das Tupel ('b', 'c', 'e') von [('b', 'c', 'e'), 'a']  ist kein Paar","Das Tupel a von ['a', ('b', 'c', 'e')]  ist kein Paar"),
-                    "Das Tupel ('a_3(x)','b') von [('a_3(x)','b')]  hat keine korrekte Syntax"]
+                    ("Das Tupel ('b', 'c', 'e') von [('b', 'c', 'e'), 'a'] ist kein Paar","Das Tupel a von ['a', ('b', 'c', 'e')] ist kein Paar"),
+                    "Das Tupel ('a_3(x)','b') von [('a_3(x)','b')] hat keine korrekte Syntax"]
         for i, conf in enumerate([s1_conf, s2_conf, conf_err1, conf_err2, conf_err3, conf_err4, conf_err5]):
             msg = SyntaxCheck.check_conf_set_syntax(conf)
             if debug:
