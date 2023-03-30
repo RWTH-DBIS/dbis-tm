@@ -185,9 +185,10 @@ class ConflictSetScorer():
        
     def removeBlanks(self,result):
         '''
-        remove blanks
+        remove blanks and underscores
         '''
         resultNoBlanks = {(str1.replace(" ", ""), str2.replace(" ", "")) for (str1, str2) in result}
+        resultNoBlanks = {(str1.replace("_", ""), str2.replace("_", "")) for (str1, str2) in result}
         return resultNoBlanks
  
     def score_conflictSet(self,result1,result2,schedule1,schedule2,max_points):

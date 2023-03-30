@@ -298,7 +298,7 @@ class TestTM(ScheduleTest):
         conf_err3 = "Garbage"
         conf_err4 = [("a"), ("b", "c", "e")]
         conf_err5 = [("a_3(x)","b")]
-        debug = True
+        debug = False
         expectedList = [None, None, "{} ist keine Liste", None, "Garbage ist keine Liste",
                     ("Das Tupel ('b', 'c', 'e') von [('b', 'c', 'e'), 'a'] ist kein Paar","Das Tupel a von ['a', ('b', 'c', 'e')] ist kein Paar"),
                     "Das Tupel ('a_3(x)', 'b') von [('a_3(x)', 'b')] hat keine korrekte Syntax"]
