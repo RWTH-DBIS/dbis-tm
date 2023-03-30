@@ -47,7 +47,7 @@ class TestTMScorer(ScheduleTest):
             result2=example["result2"]
             expected=example["expected"]
             css=ConflictSetScorer()
-            score=css.score_conflictSet(result1, result2, solution1, solution2, max_points=max_points)
+            score=css.score_conflictSet(result1, result2, solution1, solution2, max_points)
             if debug:
                 print(f"{i+1} score: {score} expected: {expected}")
             self.assertEquals(expected,score)
@@ -82,7 +82,7 @@ class TestTMScorer(ScheduleTest):
         t2 = ConflictGraphNode(2)
         t3 = ConflictGraphNode(3)
         
-        graph1 = ConflictGraph("solution for schedule s3")
+        graph1 = ConflictGraph()
         graph1.add_edge(t1, t2)
         graph1.add_edge(t1, t3)
         graph1.add_edge(t2, t1)
@@ -90,11 +90,11 @@ class TestTMScorer(ScheduleTest):
         graph1.add_edge(t3, t1)
         graph1.add_edge(t3, t2)
         
-        graph2 = ConflictGraph("solution for schedule s4")
+        graph2 = ConflictGraph()
         graph2.add_edge(t1, t3)
         graph2.add_edge(t3, t1)
         
-        conf_g3=ConflictGraph("s3")
+        conf_g3=ConflictGraph()
         conf_g3.add_edge(t1, t2)
         examples=[ {
             "name": "s3",

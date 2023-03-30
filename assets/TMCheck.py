@@ -190,7 +190,7 @@ class ConflictSetScorer():
         resultNoBlanks = {(str1.replace(" ", ""), str2.replace(" ", "")) for (str1, str2) in result}
         return resultNoBlanks
  
-    def score_conflictSet(self,result1,schedule1,max_points):
+    def score_conflictSet(self,result1,result2,schedule1,schedule2,max_points):
         '''
         score the given result sets against the given solutions
         '''
@@ -198,7 +198,11 @@ class ConflictSetScorer():
         solution1=Perform_conflictgraph.compute_conflict_quantity(schedule1)
         setScorer1=SetScorer()
         setScorer1.evaluate_set(result1, solution1, max_points=max_points/2)
-        score=setScorer1.score
+        result2=self.removeBlanks(result2)
+        solution2=Perform_conflictgraph.compute_conflict_quantity(schedule2)
+        setScorer2=SetScorer()
+        setScorer2.evaluate_set(result2, solution2, max_points=max_points/2)
+        score=setScorer1.score+setScore2.score
         return round(score,2)
     
 class ConflictSerializationScorer(Scorer):
