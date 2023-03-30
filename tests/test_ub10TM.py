@@ -277,8 +277,8 @@ class TestTM(ScheduleTest):
         """
         test the SyntaxCheck functionality for Conflicts
         """
-        s1_conf = {("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")}
-        s2_conf = {
+        s1_conf = [("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")]
+        s2_conf = [
             ("r_2(x)", "w_3(x)"),
             ("w_1(y)", "r_2(y)"),
             ("w_1(y)", "w_2(y)"),
@@ -292,13 +292,13 @@ class TestTM(ScheduleTest):
             ("w_3(y)", "r_1(y)"),
             ("w_3(y)", "w_2(y)"),
             ("r_1(y)", "w_2(y)")
-        }
-        conf_err1 = []
-        conf_err2 = {}
+        ]
+        conf_err1 = {}
+        conf_err2 = []
         conf_err3 = "Garbage"
-        conf_err4 = {("a"), ("b", "c", "e")}
+        conf_err4 = [("a"), ("b", "c", "e")]
         debug = True
-        expectedList = [None, None, "[] ist kein Set", "{} ist kein Set", "Garbage ist kein Set",
+        expectedList = [None, None, "{} ist keine Liste", None, "Garbage ist keine Liste",
                     ("Das Tupel ('b', 'c', 'e') von {('b', 'c', 'e'), 'a'}  hat keine korrekte Syntax","Das Tupel a von {'a', ('b', 'c', 'e')}  hat keine korrekte Syntax")]
         for i, conf in enumerate([s1_conf, s2_conf, conf_err1, conf_err2, conf_err3, conf_err4]):
             msg = SyntaxCheck.check_conf_set_syntax(conf)
