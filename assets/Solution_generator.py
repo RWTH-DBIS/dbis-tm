@@ -346,7 +346,7 @@ class Perform_conflictgraph:
         for i in range(1,len(conflict_list)+1):
             knots.append(ConflictGraphNode(i))
         graph = ConflictGraph()
-
+        print('test:',conflict_list)
         for i in conflict_list.keys():
             if conflict_list[i]!= set():
                 for k in conflict_list[i]:

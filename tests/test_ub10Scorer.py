@@ -42,7 +42,7 @@ class TestTMScorer(ScheduleTest):
         #{("r_2(x)", "w_3(x)"),- ("w_1(y)", "r_2(y)"), ("w_1(y)", "w_2(y)"), ("w_1(y)", "w_3(y)"),- ("w_3(z)", "w_1(z)"), ("w_3(z)", "w_2(z)"), ("r_2(y)", "w_3(y)"), 
             #  ("w_2(y)", "w_3(y)"), ("w_2(y)", "r_1(y)"), ("w_1(z)", "w_2(z)"), ("w_3(y)", "r_1(y)"), ("w_3(y)", "w_2(y)"), ("r_1(y)", "w_2(y)")}
         max_points=4
-        debug=False
+        debug=True
         for i,example in enumerate(examples):
             result1=example["result1"]
             result2=example["result2"]
