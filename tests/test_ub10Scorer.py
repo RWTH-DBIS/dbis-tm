@@ -58,7 +58,7 @@ class TestTMScorer(ScheduleTest):
         test conflict serialization scoring
         '''
         schedule1= "r1(x) w2(x) w3(x) w2(y) w3(y) r1(y) w3(z) r1(z) w2(z) c1 c2 c3"
-        schedule2 = "w1(x) w3(x) w3(y) w1(y) c1 c2"
+        schedule2 = "w1(x) w3(x) w3(y) w1(y)  r2(z) c2 c1 c3"
         t1 = ConflictGraphNode(1)
         t2 = ConflictGraphNode(2)
         t3 = ConflictGraphNode(3)
