@@ -7,7 +7,7 @@ Created 2022-05
 """
 from assets.TMBasic import Schedule, ConflictGraph, ConflictGraphNode
 from assets.TMSolver import  Recovery, Scheduling, Serializability
-#from assets.TMCheck import SyntaxCheck, ScheduleCheck
+from assets.TMCheck import SyntaxCheck, ScheduleCheck
 from tests.scheduletest import ScheduleTest
 
 class TestTM(ScheduleTest):
@@ -273,61 +273,61 @@ class TestTM(ScheduleTest):
             print(gvMarkup)
         self.assertTrue('t1 -> t2' in str(gvMarkup))
 
-    # def testConfSyntaxCheck(self):
-#         """
-#         test the SyntaxCheck functionality for Conflicts
-#         """
-#         s1_conf = {("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")}
-#         s2_conf = {
-#             ("r_2(x)", "w_3(x)"),
-#             ("w_1(y)", "r_2(y)"),
-#             ("w_1(y)", "w_2(y)"),
-#             ("w_1(y)", "w_3(y)"),
-#             ("w_3(z)", "w_1(z)"),
-#             ("w_3(z)", "w_2(z)"),
-#             ("r_2(y)", "w_3(y)"),
-#             ("w_2(y)", "w_3(y)"),
-#             ("w_2(y)", "r_1(y)"),
-#             ("w_1(z)", "w_2(z)"),
-#             ("w_3(y)", "r_1(y)"),
-#             ("w_3(y)", "w_2(y)"),
-#             ("r_1(y)", "w_2(y)")
-#         }
-#         conf_err1 = []
-#         conf_err2 = {}
-#         conf_err3 = "Garbage"
-#         conf_err4 = {("a"), ("b", "c", "e")}
-#         debug = True
-#         expectedList = [None, None, "[] ist kein Set", "{} ist kein Set", "Garbage ist kein Set",
-#                     ("Das Tupel ('b', 'c', 'e') von {('b', 'c', 'e'), 'a'}  hat keine korrekte Syntax","Das Tupel a von {'a', ('b', 'c', 'e')}  hat keine korrekte Syntax")]
-#         for i, conf in enumerate([s1_conf, s2_conf, conf_err1, conf_err2, conf_err3, conf_err4]):
-#             msg = SyntaxCheck.check_conf_set_syntax(conf)
-#             if debug:
-#                 print(f"{i}:{msg}","test")
-#             expected=expectedList[i]
-#             if isinstance(expected,tuple):
-#                 expected1,expected2=expected
-#                 self.assertTrue(expected1==msg or expected2==msg)
-#             else:
-#                 self.assertEqual(expected, msg)
+    def testConfSyntaxCheck(self):
+        """
+        test the SyntaxCheck functionality for Conflicts
+        """
+        s1_conf = {("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")}
+        s2_conf = {
+            ("r_2(x)", "w_3(x)"),
+            ("w_1(y)", "r_2(y)"),
+            ("w_1(y)", "w_2(y)"),
+            ("w_1(y)", "w_3(y)"),
+            ("w_3(z)", "w_1(z)"),
+            ("w_3(z)", "w_2(z)"),
+            ("r_2(y)", "w_3(y)"),
+            ("w_2(y)", "w_3(y)"),
+            ("w_2(y)", "r_1(y)"),
+            ("w_1(z)", "w_2(z)"),
+            ("w_3(y)", "r_1(y)"),
+            ("w_3(y)", "w_2(y)"),
+            ("r_1(y)", "w_2(y)")
+        }
+        conf_err1 = []
+        conf_err2 = {}
+        conf_err3 = "Garbage"
+        conf_err4 = {("a"), ("b", "c", "e")}
+        debug = True
+        expectedList = [None, None, "[] ist kein Set", "{} ist kein Set", "Garbage ist kein Set",
+                    ("Das Tupel ('b', 'c', 'e') von {('b', 'c', 'e'), 'a'}  hat keine korrekte Syntax","Das Tupel a von {'a', ('b', 'c', 'e')}  hat keine korrekte Syntax")]
+        for i, conf in enumerate([s1_conf, s2_conf, conf_err1, conf_err2, conf_err3, conf_err4]):
+            msg = SyntaxCheck.check_conf_set_syntax(conf)
+            if debug:
+                print(f"{i}:{msg}","test")
+            expected=expectedList[i]
+            if isinstance(expected,tuple):
+                expected1,expected2=expected
+                self.assertTrue(expected1==msg or expected2==msg)
+            else:
+                self.assertEqual(expected, msg)
                 
 
-#     def testScheduleSyntaxCheck(self):
-#         """
-#         test the SyntaxCheck functionality for Schedules
-#         """
-#         schedule_1 = "w_2(x) w_1(z) r_2(y) r_1(x) r_3(z) w_3(x) w_1(y) c_1 c_2 c_3"
-#         schedule_2 = "r_2(z) w_1(y) r_3(z) r_2(y) r_1(x) w_2(y) w_3(x) c_1 c_2 c_3"
-#         schedule_3 = "r_1(x) w_2(z) w_3(y) w_2(x) r_3(z) r_1(y) r_2(y) c_1 c_2 c_3"
-#         schedule_4 = "w2(x)"
-#         schedule_5 = "rl_1(x) r_1(x) wl_2(z) w_2(z)  wl_3(y) w_3(y) wl_2(x) w_2(x) rl_3(z) r_3(z) wu_3(y) ru_3(z) rl_1(y) r_1(y) ru_1(x) ru_1(y) rl_2(y) r_2(y) wu_2(z) wu_2(x) ru_2(y) c_1 c_2 c_3"
-#         schedule_6 = "wl_2(x) rl_2(y) w_2(x) wu_2(x) r_2(y) ru_2(y) c_2 wl_1(z) rl_1(x) wl_1(y) w_1(z) wu_1(z) r_1(x) ru_1(x) rl_3(z) wl_3(x) r_3(z) ru_3(z) w_3(x) wu_3(x) c_3 w_1(y) wu_1(y) c_1"
-#         schedule_err2 = ""
-#         expected = [None, None, None, None,None,None,
-#                     "Leerer Schedule kann keine Lösung sein"]
-#         debug = True
-#         for i, schedule in enumerate([schedule_1, schedule_2, schedule_3, schedule_4, schedule_5,schedule_6,schedule_err2]):
-#             msg = SyntaxCheck.check_schedule_syntax(schedule)
-#             if debug:
-#                 print(msg)
-#             self.assertEqual(expected[i], msg)
+    def testScheduleSyntaxCheck(self):
+        """
+        test the SyntaxCheck functionality for Schedules
+        """
+        schedule_1 = "w_2(x) w_1(z) r_2(y) r_1(x) r_3(z) w_3(x) w_1(y) c_1 c_2 c_3"
+        schedule_2 = "r_2(z) w_1(y) r_3(z) r_2(y) r_1(x) w_2(y) w_3(x) c_1 c_2 c_3"
+        schedule_3 = "r_1(x) w_2(z) w_3(y) w_2(x) r_3(z) r_1(y) r_2(y) c_1 c_2 c_3"
+        schedule_4 = "w2(x)"
+        schedule_5 = "rl_1(x) r_1(x) wl_2(z) w_2(z)  wl_3(y) w_3(y) wl_2(x) w_2(x) rl_3(z) r_3(z) wu_3(y) ru_3(z) rl_1(y) r_1(y) ru_1(x) ru_1(y) rl_2(y) r_2(y) wu_2(z) wu_2(x) ru_2(y) c_1 c_2 c_3"
+        schedule_6 = "wl_2(x) rl_2(y) w_2(x) wu_2(x) r_2(y) ru_2(y) c_2 wl_1(z) rl_1(x) wl_1(y) w_1(z) wu_1(z) r_1(x) ru_1(x) rl_3(z) wl_3(x) r_3(z) ru_3(z) w_3(x) wu_3(x) c_3 w_1(y) wu_1(y) c_1"
+        schedule_err2 = ""
+        expected = [None, None, None, None,None,None,
+                    "Leerer Schedule kann keine Lösung sein"]
+        debug = True
+        for i, schedule in enumerate([schedule_1, schedule_2, schedule_3, schedule_4, schedule_5,schedule_6,schedule_err2]):
+            msg = SyntaxCheck.check_schedule_syntax(schedule)
+            if debug:
+                print(msg)
+            self.assertEqual(expected[i], msg)

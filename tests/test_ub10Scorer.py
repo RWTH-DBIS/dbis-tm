@@ -5,7 +5,6 @@ Created on 2022-07-16
 '''
 from assets.TMCheck import ConflictSetScorer, ConflictSerializationScorer, RecoveryScorer, ScheduleScorer
 from assets.TMBasic import ConflictGraph, ConflictGraphNode
-
 from tests.scheduletest import ScheduleTest
 
 class TestTMScorer(ScheduleTest):
@@ -42,7 +41,7 @@ class TestTMScorer(ScheduleTest):
         solution2 = {("r_2(x)", "w_3(x)"), ("w_1(y)", "r_2(y)"), ("w_1(y)", "w_2(y)"), ("w_1(y)", "w_3(y)"), ("w_3(z)", "w_1(z)"), ("w_3(z)", "w_2(z)"), ("r_2(y)", "w_3(y)"), 
              ("w_2(y)", "w_3(y)"), ("w_2(y)", "r_1(y)"), ("w_1(z)", "w_2(z)"), ("w_3(y)", "r_1(y)"), ("w_3(y)", "w_2(y)"), ("r_1(y)", "w_2(y)")}
         max_points=4
-        debug=True
+        debug=False
         for i,example in enumerate(examples):
             result1=example["result1"]
             result2=example["result2"]
@@ -99,7 +98,7 @@ class TestTMScorer(ScheduleTest):
             "expected": 1.5
             }
         ]
-        debug=True
+        debug=False
         for i,example in enumerate(examples):
             name=example["name"]
             result=example["result"]
@@ -260,7 +259,7 @@ class TestTMScorer(ScheduleTest):
                 )
             },
         ]
-        debug=True
+        debug=False
         for i,example in enumerate(examples):
             name=example["name"]
             result=example["result"]
@@ -278,7 +277,7 @@ class TestTMScorer(ScheduleTest):
         test the Schedule scorer
         '''
         examples=self.getScheduleExamples()
-        debug=True
+        debug=False
         for i,example in enumerate(examples):
             index=example["index"]
             schedule=example["schedule"]
