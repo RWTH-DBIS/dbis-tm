@@ -1,5 +1,10 @@
 # Erklärung TM Paket
 
+# Nachtrag HTWR Scheduler Recovery Lösen
+``w2(b) w3(b) c3 a2 ``\
+Wird falsch ausgewertet (False, False, False), sollte aber (True, True, False) sein.
+Das Problem scheint in RC zu liegen da es für ``w2(b) w3(b) r2(b) c3 a2 `` immer noch besteht.
+
 # Table of Contents
 1.[Generell](#generell)\
 2.[Generator](#1Generator)\
