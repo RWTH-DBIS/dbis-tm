@@ -1,32 +1,68 @@
-image: python:latest
+default:
+  image: python:3.10
+  cache:
+    paths:
+      # we cache pip so it does not always need to access the internet for package downloads
+      - .cache/pip
+  before_script:
+    - python -V
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+
+variables:  # Change pip's cache directory to be inside the project directory since we can only cache local items.
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
 
 stages:
-- test
-- build
+    - test
+    - build
 
-unit-test-3.10:
-    image: python:3.10
+.test: &test
+  stage: test
+  script:
+    - pip install tox
+    - tox -r -e $TOXENV
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    when: always
+    reports:
+      junit: report/$TOXENV/report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/$TOXENV/coverage.xml
+
+test-py310:
+  image: python:3.10
+  <<: *test
+  variables:
+    TOXENV: py310  
+
+test-py311:
+  image: python:3.11
+  <<: *test
+  variables:
+    TOXENV: py311
+
+formatting-check:
     stage: test
     script:
-        - pip install tox
-        - tox -r -e py310
- 
+      - pip install black
+      - black --check .
 
 build-3.10:
     image: python:3.10
     stage: build
     needs:
-        - unit-test-3.10
+        - test-py310
     script:
         - pip install build twine
         - python -m build
         - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+        # publish to pypi
+        - TWINE_PASSWORD=${PYPI_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/*
 
     rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes: 
-        - pyproject.toml
-    - if: $CI_PIPELINE_SOURCE == "tags"
-
-
-
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+          changes:
+              - pyproject.toml
