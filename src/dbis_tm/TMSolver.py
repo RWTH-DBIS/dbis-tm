@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import itertools
 import sys
-from assets.TM import Schedule, OperationType
+from dbis_tm.TM import Schedule, OperationType
 from typing import Union
 from graphviz import Digraph
+
 
 class Serializability:
     """
@@ -30,7 +31,9 @@ class Serializability:
         raise TypeError("Cannot create 'Serializability' instances.")
 
     @classmethod
-    def conflict_graph_contains_cycle(cls, graph: dict, current: set[int], start: int, visited: set[int]) -> bool:
+    def conflict_graph_contains_cycle(
+        cls, graph: dict, current: set[int], start: int, visited: set[int]
+    ) -> bool:
         """
         Helper method.
         Uses a simple DFS to detect a cycle in `graph`.
@@ -43,7 +46,9 @@ class Serializability:
                 return True
             elif dependency not in visited:
                 visited.add(dependency)
-                has_cycle = cls.conflict_graph_contains_cycle(graph, dependency, start, visited)
+                has_cycle = cls.conflict_graph_contains_cycle(
+                    graph, dependency, start, visited
+                )
                 if has_cycle:
                     return True
         return False
@@ -59,8 +64,10 @@ class Serializability:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-            
-        schedule.operations = list(filter(lambda op: op.tx_number not in schedule.aborts, schedule.operations))
+
+        schedule.operations = list(
+            filter(lambda op: op.tx_number not in schedule.aborts, schedule.operations)
+        )
 
     @classmethod
     def is_serializable(cls, schedule: Union[Schedule, str]) -> tuple[bool, dict]:
@@ -75,22 +82,26 @@ class Serializability:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-            
+
         # graph[1] = {2,3} means that tx 1 is "in conflict" with txs 2 and 3
         graph = {operation.tx_number: set() for operation in schedule.operations}
 
         # For each operation i in `operation_list` check all operations i + 1 until n
         # for conflicts (i.e., same resource, not same tx, but one of the operations is a write operation)
         for op1, i in zip(schedule.operations, range(len(schedule.operations))):
-            for op2 in schedule.operations[i + 1:]:
-                if op1.resource != op2.resource \
-                        or op1.tx_number == op2.tx_number:
+            for op2 in schedule.operations[i + 1 :]:
+                if op1.resource != op2.resource or op1.tx_number == op2.tx_number:
                     continue
-                elif op1.op_type == OperationType.WRITE or op2.op_type == OperationType.WRITE:
+                elif (
+                    op1.op_type == OperationType.WRITE
+                    or op2.op_type == OperationType.WRITE
+                ):
                     graph[op1.tx_number].add(op2.tx_number)
 
         # Check for each tx whether it is part of a cycle in the conflict graph
-        graph_has_cycle = any(map(lambda n: cls.conflict_graph_contains_cycle(graph, n, n, set()), graph))
+        graph_has_cycle = any(
+            map(lambda n: cls.conflict_graph_contains_cycle(graph, n, n, set()), graph)
+        )
         return not graph_has_cycle, graph
 
     @classmethod
@@ -101,11 +112,12 @@ class Serializability:
         Returns:
             Graphviz Digraph object
         """
-        dg = Digraph('')
+        dg = Digraph("")
         for t1 in graph:
             for t2 in graph:
-                dg.edge(f't{t1}', f't{t2}')
+                dg.edge(f"t{t1}", f"t{t2}")
         return dg
+
 
 class Recovery:
     """
@@ -123,7 +135,9 @@ class Recovery:
         raise TypeError("Cannot create 'Recovery' instances.")
 
     @classmethod
-    def reads_from(cls, schedule: Union[Schedule, str], tx1: int, resource: str, tx2: int) -> Tuple(bool,int):
+    def reads_from(
+        cls, schedule: Union[Schedule, str], tx1: int, resource: str, tx2: int
+    ) -> Tuple(bool, int):
         """
         Helper method that implements the "reads from" relation:
         We say that any transaction t_i reads any resource x from any transaction t_j if:
@@ -137,7 +151,11 @@ class Recovery:
             schedule = schedule[0]
 
         for op1, i in zip(schedule.operations, range(len(schedule.operations))):
-            if not (op1.op_type == OperationType.READ and op1.tx_number == tx1 and op1.resource == resource):
+            if not (
+                op1.op_type == OperationType.READ
+                and op1.tx_number == tx1
+                and op1.resource == resource
+            ):
                 continue
             elif schedule.aborts.get(tx2, sys.maxsize) < op1.index:
                 # possible that the same action is done twice in one schedule, have to check both
@@ -148,14 +166,16 @@ class Recovery:
                         continue
                     else:
                         # possible that the same action is done twice in one schedule, have to check both
-                        if  op2.tx_number == tx2:
-                            return True,op1.index
+                        if op2.tx_number == tx2:
+                            return True, op1.index
                         else:
                             break
-        return False,op1.index
+        return False, op1.index
 
     @classmethod
-    def is_recoverable(cls, schedule: Union[Schedule, str]) -> tuple[bool, set[tuple[int, str, int, bool]]]:
+    def is_recoverable(
+        cls, schedule: Union[Schedule, str]
+    ) -> tuple[bool, set[tuple[int, str, int, bool]]]:
         """
         Check whether `schedule` s is recoverable, i.e., whether the following holds
         for all transaction pairs t_i, t_j with i != j:
@@ -185,14 +205,18 @@ class Recovery:
                 continue
             reads = cls.reads_from(schedule, i, r, j)[0]
             # Equivalent to ("t_i reads r from t_j" AND "c_i in s") IMPLIES "c_j <_s c_i"
-            if not (reads and i in schedule.commits) or (schedule.commits.get(j, sys.maxsize) < schedule.commits[i]):
+            if not (reads and i in schedule.commits) or (
+                schedule.commits.get(j, sys.maxsize) < schedule.commits[i]
+            ):
                 proof.add((i, r, j, reads))
             else:
                 cex.add((i, r, j, reads))
         return (False, cex) if len(cex) != 0 else (True, proof)
 
     @classmethod
-    def avoids_cascading_aborts(cls, schedule: Union[Schedule, str]) -> tuple[bool, set[tuple[int, str, int, bool]]]:
+    def avoids_cascading_aborts(
+        cls, schedule: Union[Schedule, str]
+    ) -> tuple[bool, set[tuple[int, str, int, bool]]]:
         """
         Check whether `schedule` s avoids cascading aborts, i.e., whether the following holds
         for all transaction pairs t_i, t_j with i != j:
@@ -219,14 +243,21 @@ class Recovery:
             reads, index = cls.reads_from(schedule, i, r, j)
             if reads:
                 for op in schedule.operations:
-                    if op.op_type == OperationType.READ and op.tx_number == i and op.resource == r and op.index == index  \
-                            and schedule.commits.get(j, sys.maxsize) >= op.index:
+                    if (
+                        op.op_type == OperationType.READ
+                        and op.tx_number == i
+                        and op.resource == r
+                        and op.index == index
+                        and schedule.commits.get(j, sys.maxsize) >= op.index
+                    ):
                         cex.add((i, r, j, reads))
             proof.add((i, r, j, reads))
         return (False, cex) if len(cex) != 0 else (True, proof)
 
     @classmethod
-    def is_strict(cls, schedule: Union[Schedule, str]) -> tuple[bool, set[tuple[str, str, bool, bool]]]:
+    def is_strict(
+        cls, schedule: Union[Schedule, str]
+    ) -> tuple[bool, set[tuple[str, str, bool, bool]]]:
         """
         Check whether `schedule` s is strict, i.e., whether the following holds
         for all transactions t_j and all operations p_i from t_j:
@@ -250,8 +281,12 @@ class Recovery:
                 if op1.tx_number == op2.tx_number or op1.resource != op2.resource:
                     continue
                 elif op2.op_type == OperationType.WRITE:
-                    aborted = schedule.aborts.get(op2.tx_number, sys.maxsize) < op1.index
-                    committed = schedule.commits.get(op2.tx_number, sys.maxsize) < op1.index
+                    aborted = (
+                        schedule.aborts.get(op2.tx_number, sys.maxsize) < op1.index
+                    )
+                    committed = (
+                        schedule.commits.get(op2.tx_number, sys.maxsize) < op1.index
+                    )
                     if not (aborted or committed):
                         cex.add((str(op2), str(op1), aborted, committed))
                     else:
@@ -278,7 +313,7 @@ class Scheduling:
     @classmethod
     def is_2PL(cls, schedule: Union[Schedule, str]) -> tuple[bool, list[str]]:
         """
-         Check whether `schedule` s satisfies 2-phase-locking, i.e., whether the following holds: 
+         Check whether `schedule` s satisfies 2-phase-locking, i.e., whether the following holds:
             In the first phase locks can only be set.
             In the second phase locks can only be released. Only possible after all locks have been set.
 
@@ -291,7 +326,7 @@ class Scheduling:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-            
+
         transactions = [[]]  # [[1,2,3,...][#1 ][#2][#3]...]
         locks = []  # all things which have to be locked [[locks of transaction 1][...]]
 
@@ -301,14 +336,22 @@ class Scheduling:
                 transactions[0].extend([i.tx_number])
                 transactions.append([i])
                 locks.append([])
-                if i.op_type == OperationType.READ_LOCK or i.op_type == OperationType.WRITE_LOCK:
-                    locks[len(transactions) - 2].extend([i.op_type.value[0] + i.resource])
+                if (
+                    i.op_type == OperationType.READ_LOCK
+                    or i.op_type == OperationType.WRITE_LOCK
+                ):
+                    locks[len(transactions) - 2].extend(
+                        [i.op_type.value[0] + i.resource]
+                    )
                     # op_type, tx_number, resource, index)
                     # r, 1, x, an wie vielter stelle
             else:
                 index = transactions[0].index(i.tx_number)
                 transactions[index + 1].extend([i])
-                if i.op_type == OperationType.READ_LOCK or i.op_type == OperationType.WRITE_LOCK:
+                if (
+                    i.op_type == OperationType.READ_LOCK
+                    or i.op_type == OperationType.WRITE_LOCK
+                ):
                     locks[index].extend([i.op_type.value[0] + i.resource])
         errors = []
         # go through transactions and verify whether they are 2PL
@@ -322,15 +365,24 @@ class Scheduling:
                 if locks_set == locks[i]:  # all locks set?
                     all_locked = True
 
-                if current_op == OperationType.WRITE_LOCK or current_op == OperationType.READ_LOCK:
+                if (
+                    current_op == OperationType.WRITE_LOCK
+                    or current_op == OperationType.READ_LOCK
+                ):
                     if representation not in locks_set:
                         locks_set.append(representation)
                     else:
                         errors.append(f"--Double lock: {j}")
-                elif current_op == OperationType.WRITE or current_op == OperationType.READ:
+                elif (
+                    current_op == OperationType.WRITE
+                    or current_op == OperationType.READ
+                ):
                     if representation not in locks_set:
                         errors.append(f"--Not locked before using: {j}")
-                elif current_op == OperationType.WRITE_UNLOCK or current_op == OperationType.READ_UNLOCK:
+                elif (
+                    current_op == OperationType.WRITE_UNLOCK
+                    or current_op == OperationType.READ_UNLOCK
+                ):
                     if all_locked:  # all locked?
                         if representation in locks_set:  # already locked?
                             locks_set.remove(representation)
@@ -357,20 +409,38 @@ class Scheduling:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-            
+
         res = cls.is_2PL(schedule)
         if not res[0]:
             return False, res[1]
 
         for i in range(1, schedule.tx_count + 1):
             tx_ops = list(filter(lambda op: op.tx_number == i, schedule.operations))
-            index_last_lock = next((tx_ops.index(op) for op in reversed(tx_ops) if
-                                    op.op_type in [OperationType.READ_LOCK, OperationType.WRITE_LOCK]), sys.maxsize)
+            index_last_lock = next(
+                (
+                    tx_ops.index(op)
+                    for op in reversed(tx_ops)
+                    if op.op_type in [OperationType.READ_LOCK, OperationType.WRITE_LOCK]
+                ),
+                sys.maxsize,
+            )
             index_first_op = next(
-                (tx_ops.index(op) for op in tx_ops if op.op_type in [OperationType.WRITE, OperationType.READ]),
-                -sys.maxsize)
+                (
+                    tx_ops.index(op)
+                    for op in tx_ops
+                    if op.op_type in [OperationType.WRITE, OperationType.READ]
+                ),
+                -sys.maxsize,
+            )
             if index_last_lock >= index_first_op:
-                lock = next((op for op in tx_ops if op.op_type in [OperationType.READ_LOCK, OperationType.WRITE_LOCK]))
+                lock = next(
+                    (
+                        op
+                        for op in tx_ops
+                        if op.op_type
+                        in [OperationType.READ_LOCK, OperationType.WRITE_LOCK]
+                    )
+                )
                 return False, [f"Lock {lock} was acquired after first r/w operation"]
         return True, []
 
@@ -389,21 +459,33 @@ class Scheduling:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-            
+
         res = cls.is_2PL(schedule)
         if not res[0]:
             return False, res[1]
 
         for i in range(1, schedule.tx_count + 1):
             tx_ops = list(filter(lambda op: op.tx_number == i, schedule.operations))
-            index_first_unlock = next((tx_ops.index(op) for op in tx_ops if
-                                       op.op_type == OperationType.WRITE_UNLOCK), sys.maxsize)
+            index_first_unlock = next(
+                (
+                    tx_ops.index(op)
+                    for op in tx_ops
+                    if op.op_type == OperationType.WRITE_UNLOCK
+                ),
+                sys.maxsize,
+            )
             index_last_op = next(
-                (tx_ops.index(op) for op in reversed(tx_ops) if
-                 op.op_type in [OperationType.WRITE, OperationType.READ]),
-                -sys.maxsize)
+                (
+                    tx_ops.index(op)
+                    for op in reversed(tx_ops)
+                    if op.op_type in [OperationType.WRITE, OperationType.READ]
+                ),
+                -sys.maxsize,
+            )
             if index_first_unlock <= index_last_op:
-                unlock = next((op for op in tx_ops if op.op_type == OperationType.WRITE_UNLOCK))
+                unlock = next(
+                    (op for op in tx_ops if op.op_type == OperationType.WRITE_UNLOCK)
+                )
                 return False, [f"Unlock {unlock} was done before last r/w operation"]
         return True, []
 
@@ -422,24 +504,38 @@ class Scheduling:
             schedule = Schedule.parse_schedule(schedule)
             assert not schedule[1]
             schedule = schedule[0]
-            
+
         res = cls.is_2PL(schedule)
         if not res[0]:
             return False, res[1]
 
         for i in range(1, schedule.tx_count + 1):
             tx_ops = list(filter(lambda op: op.tx_number == i, schedule.operations))
-            index_first_unlock = next((tx_ops.index(op) for op in tx_ops if
-                                       op.op_type in [OperationType.READ_UNLOCK, OperationType.WRITE_UNLOCK]),
-                                      sys.maxsize)
+            index_first_unlock = next(
+                (
+                    tx_ops.index(op)
+                    for op in tx_ops
+                    if op.op_type
+                    in [OperationType.READ_UNLOCK, OperationType.WRITE_UNLOCK]
+                ),
+                sys.maxsize,
+            )
             index_last_op = next(
-                (tx_ops.index(op) for op in reversed(tx_ops) if
-                 op.op_type in [OperationType.WRITE, OperationType.READ]),
-                -sys.maxsize)
+                (
+                    tx_ops.index(op)
+                    for op in reversed(tx_ops)
+                    if op.op_type in [OperationType.WRITE, OperationType.READ]
+                ),
+                -sys.maxsize,
+            )
             if index_first_unlock <= index_last_op:
                 unlock = next(
-                    (op for op in tx_ops if op.op_type in [OperationType.READ_UNLOCK, OperationType.WRITE_UNLOCK]))
+                    (
+                        op
+                        for op in tx_ops
+                        if op.op_type
+                        in [OperationType.READ_UNLOCK, OperationType.WRITE_UNLOCK]
+                    )
+                )
                 return False, [f"Unlock {unlock} was done before last r/w operation"]
         return True, []
-
-

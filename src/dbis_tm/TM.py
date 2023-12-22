@@ -13,15 +13,16 @@ from enum import Enum, EnumMeta
 from typing import Union
 from graphviz import Digraph
 
+
 class OperationTypeMeta(EnumMeta):
-    '''
+    """
     meta class for Operation type
-    '''
+    """
 
     def __contains__(self, item):
-        '''
+        """
         check that the item is contained in my member values
-        '''
+        """
         return item in [v.value for v in self.__members__.values()]
 
 
@@ -29,12 +30,13 @@ class OperationType(Enum, metaclass=OperationTypeMeta):
     """
     The kind / type of operation for an Operation
     """
-    READ = 'r'
-    READ_LOCK = 'rl'
-    READ_UNLOCK = 'ru'
-    WRITE = 'w'
-    WRITE_LOCK = 'wl'
-    WRITE_UNLOCK = 'wu'
+
+    READ = "r"
+    READ_LOCK = "rl"
+    READ_UNLOCK = "ru"
+    WRITE = "w"
+    WRITE_LOCK = "wl"
+    WRITE_UNLOCK = "wu"
 
 
 # class Transaction:
@@ -48,7 +50,9 @@ class Operation:
     I am a step of a transaction
     """
 
-    def __init__(self, op_type: OperationType, tx_number: int, resource: str, index: int):
+    def __init__(
+        self, op_type: OperationType, tx_number: int, resource: str, index: int
+    ):
         """
         Constructor
 
@@ -57,7 +61,7 @@ class Operation:
             tx_number(int): link to my Transaction
             resource(str): link to my data object the operation will be applied on
             index(int): my position in the schedule
-         """
+        """
         self.op_type = op_type
         self.tx_number = tx_number
         self.resource = resource
@@ -67,9 +71,12 @@ class Operation:
         return f"{self.op_type.value}{self.tx_number}({self.resource})"
 
     def __eq__(self, obj):
-        return (isinstance(obj, Operation) and self.op_type == obj.op_type
-                and self.tx_number == obj.tx_number
-                and self.resource == obj.resource)
+        return (
+            isinstance(obj, Operation)
+            and self.op_type == obj.op_type
+            and self.tx_number == obj.tx_number
+            and self.resource == obj.resource
+        )
 
 
 class Schedule:
@@ -80,8 +87,16 @@ class Schedule:
         a map of aborts and commits,
         and a count of transactions
     """
+
     # aborts: key:value (transaction: index)
-    def __init__(self, operations: list[Operation], resources: set[str], tx_count: int, aborts: dict, commits: dict):
+    def __init__(
+        self,
+        operations: list[Operation],
+        resources: set[str],
+        tx_count: int,
+        aborts: dict,
+        commits: dict,
+    ):
         """
         Constructor:
 
@@ -99,24 +114,25 @@ class Schedule:
         self.commits = commits
 
     def __repr__(self):
-        return f"Schedule[operations: {self.operations}, resources: {self.resources}, tx_count: {self.tx_count}, " \
-               f"aborts: {self.aborts}, commits: {self.commits}]"
+        return (
+            f"Schedule[operations: {self.operations}, resources: {self.resources}, tx_count: {self.tx_count}, "
+            f"aborts: {self.aborts}, commits: {self.commits}]"
+        )
 
     @classmethod
-    def sanitize(cls,schedule:str)->str:
-        '''
+    def sanitize(cls, schedule: str) -> str:
+        """
         return a sanitized schedule
-        
+
         Args:
             schedule(str): the plain input schedule using underscores and whitespaces
-            
+
         Returns:
             str: the sanitized schedule with underscores and whitespaces removed
-        '''
-        for removeChar in [" ","_","\t","\n"]:
+        """
+        for removeChar in [" ", "_", "\t", "\n"]:
             schedule = schedule.replace(removeChar, "")
         return schedule
-
 
     @classmethod
     def parse_schedule(cls, schedule_str: str) -> tuple[Schedule, str]:
@@ -148,13 +164,13 @@ class Schedule:
                 operation_type = OperationType(curr_char)
                 index += 1
                 i += 1
-            elif curr_char == 'c':
+            elif curr_char == "c":
                 index += 1
                 parsed_schedule.commits[int(next_char)] = index
 
                 i += 2
                 continue
-            elif curr_char == 'a':
+            elif curr_char == "a":
                 index += 1
                 parsed_schedule.aborts[int(next_char)] = index
                 i += 2
@@ -180,7 +196,9 @@ class Schedule:
             parsed_schedule.resources.add(resource)
             i += 2
 
-            parsed_schedule.operations.append(Operation(operation_type, int(tx_number), resource, index))
+            parsed_schedule.operations.append(
+                Operation(operation_type, int(tx_number), resource, index)
+            )
 
         parsed_schedule.tx_count = len(tx)
         return parsed_schedule, ""
@@ -198,29 +216,47 @@ class Schedule:
         schedule_str = ""
         abort = schedule.aborts
         commit = schedule.commits
-        op_len = len( schedule.operations )
+        op_len = len(schedule.operations)
         op_counter = 0
-        for i in range (1, op_len + schedule.tx_count +1):
+        for i in range(1, op_len + schedule.tx_count + 1):
             if op_counter < op_len:
                 operation = schedule.operations[op_counter]
             if op_counter < op_len and operation.index == i:
-                op_counter +=1
-                schedule_str += operation.op_type.value + str(operation.tx_number) +"(" + operation.resource+") "
+                op_counter += 1
+                schedule_str += (
+                    operation.op_type.value
+                    + str(operation.tx_number)
+                    + "("
+                    + operation.resource
+                    + ") "
+                )
             else:
-                trc = list(filter(lambda trans: commit.get(trans) == i, range(1,schedule.tx_count+1)))
-                tra = list(filter(lambda trans: abort.get(trans) == i, range(1,schedule.tx_count+1)))
+                trc = list(
+                    filter(
+                        lambda trans: commit.get(trans) == i,
+                        range(1, schedule.tx_count + 1),
+                    )
+                )
+                tra = list(
+                    filter(
+                        lambda trans: abort.get(trans) == i,
+                        range(1, schedule.tx_count + 1),
+                    )
+                )
                 if trc:
-                    #get transaction if index from dict
-                    schedule_str += "c" + str(trc[0]) + " " 
+                    # get transaction if index from dict
+                    schedule_str += "c" + str(trc[0]) + " "
                 elif tra:
                     # get transaction of index from dict
-                    schedule_str += "a" + str(tra[0]) + " " 
+                    schedule_str += "a" + str(tra[0]) + " "
                 else:
-                    return schedule_str, "The index: "+str(i)+ "is not given."
-        return schedule_str, "" 
-    
+                    return schedule_str, "The index: " + str(i) + "is not given."
+        return schedule_str, ""
+
     @classmethod
-    def is_operations_same(cls, schedule: Union[Schedule, str], mod_schedule: Union[Schedule, str]) -> bool:
+    def is_operations_same(
+        cls, schedule: Union[Schedule, str], mod_schedule: Union[Schedule, str]
+    ) -> bool:
         """
         Checks whether the two  given schedules do have the same operations.
 
@@ -240,10 +276,13 @@ class Schedule:
             mod_schedule = Schedule.parse_schedule(mod_schedule)
             assert not mod_schedule[1]
             mod_schedule = mod_schedule[0]
-            
-            
-        org_operations = list(filter(
-            lambda op: op.op_type in [OperationType.READ, OperationType.WRITE], mod_schedule.operations))
+
+        org_operations = list(
+            filter(
+                lambda op: op.op_type in [OperationType.READ, OperationType.WRITE],
+                mod_schedule.operations,
+            )
+        )
         for x in org_operations:
             if x in schedule.operations:
                 continue
@@ -255,15 +294,21 @@ class Schedule:
             else:
                 return False
         for i in range(1, schedule.tx_count + 1):
-            trans_op_mod = list(filter(
-                lambda op: op.op_type in [OperationType.READ, OperationType.WRITE] and op.tx_number == i,
-                mod_schedule.operations))
-            trans_op_org = list(filter(
-                lambda op: op.tx_number == i, schedule.operations))
+            trans_op_mod = list(
+                filter(
+                    lambda op: op.op_type in [OperationType.READ, OperationType.WRITE]
+                    and op.tx_number == i,
+                    mod_schedule.operations,
+                )
+            )
+            trans_op_org = list(
+                filter(lambda op: op.tx_number == i, schedule.operations)
+            )
             if not (trans_op_mod == trans_op_org):
                 return False
         return True
-        
+
+
 class ConflictGraph:
     """
     a conflict graph
@@ -272,15 +317,21 @@ class ConflictGraph:
     def __init__(self):
         self.nodes = set()
         self.edges = set()
-        self.digraph = Digraph("ConflictGraph",
-                               "generated by DBIS VL UB 10 TM.ConflictGraph",
-                               graph_attr={'label': 'Conflict Graph'})
+        self.digraph = Digraph(
+            "ConflictGraph",
+            "generated by DBIS VL UB 10 TM.ConflictGraph",
+            graph_attr={"label": "Conflict Graph"},
+        )
 
     def isEmpty(self):
         return len(self.nodes) == 0
 
     def __eq__(self, obj):
-        return isinstance(obj, ConflictGraph) and self.nodes == obj.nodes and self.edges == obj.edges
+        return (
+            isinstance(obj, ConflictGraph)
+            and self.nodes == obj.nodes
+            and self.edges == obj.edges
+        )
 
     def get_graphviz_graph(self):
         return self.digraph
@@ -293,9 +344,7 @@ class ConflictGraph:
 
 
 class ConflictGraphNode:
-    """
-    
-    """
+    """ """
 
     def __init__(self, tx_number: int):
         self.tx_number = tx_number
@@ -305,4 +354,3 @@ class ConflictGraphNode:
 
     def __hash__(self):
         return hash(self.tx_number)
-
