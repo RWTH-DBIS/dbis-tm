@@ -5,7 +5,7 @@ Created 2022-05
 @author: Marc
 @author: Wolfgang
 """
-from dbis_tm.TM import Schedule, ConflictGraph, ConflictGraphNode
+from dbis_tm import Schedule, ConflictGraph, ConflictGraphNode
 from dbis_tm.TMSolver import Recovery, Scheduling, Serializability
 from dbis_tm.TMCheck import SyntaxCheck, ScheduleCheck
 from tests.scheduletest import ScheduleTest
@@ -63,63 +63,629 @@ class TestTM(ScheduleTest):
         # malformed
     ]
 
-    # A tuple denotes: (schedule, is_RC, is_ACA, is_ST)
+    # A tuple denotes: (schedule, (is_RC, proof/counterexample), (is_ACA, proof/counterexample), (is_ST, proof/counterexample))
     schedule_recoverability_tests = [
-        ("w1(x)r2(y)r1(x)r2(x)c1w2(x)c2", True, False, False),
-        ("w1(x)w2(y)r1(y)r2(x)c2w1(y)c1", False, False, False),
-        ("w1(x)r2(y)c1w2(x)r2(x)w2(y)c2", True, True, True),
-        ("w2(x)r1(y)r2(x)r1(x)c2w1(y)c1", True, False, False),
-        ("w1(x)w1(y)r2(u)w2(x)r2(y)w2(y)c2w1(z)c1", False, False, False),
-        ("w1(x)w1(y)r2(u)w2(x)r2(y)w2(y)w1(z)c1c2", True, False, False),
-        ("w1(x)w1(y)r2(u)w2(x)r2(y)r3(x)w2(z)a2r1(z)c1c3", False, False, False),
         (
-            "r1(x)w2(y)r1(x)w3(z)w3(x)r1(y)w1(y)w2(z)w1(z)w3(y)r2(x)c3r2(y)c2w1(y)a1",
-            True,
-            False,
-            False,
+            "w1(x)w3(x)a3r2(x)c1c2",
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (1, "x", 3, False),
+                    (2, "x", 1, True),
+                    (2, "x", 3, False),
+                    (3, "x", 1, False),
+                    (3, "x", 2, False),
+                },
+            ),
+            (False, {(2, "x", 1, True)}),
+            (
+                False,
+                {("w1(x)", "w3(x)", False, False), ("w1(x)", "r2(x)", False, False)},
+            ),
         ),
-        ("w1(x)r2(y)r1(x)r2(x)c1w2(x)c2", True, False, False),
-        ("w1(x)w2(y)r1(y)r2(x)c2w1(y)c1", False, False, False),
-        ("w1(x)r2(y)c1w2(x)r2(x)w2(y)c2", True, True, True),
-        ("w2(x)r1(y)r2(x)r1(x)c2w1(y)c1", True, False, False),
-        ("w1(x)w1(y)r2(u)w2(x)r2(y)w2(y)w1(z)c1c2", True, False, False),
-        ("w1(x)w1(y)r2(u)w2(x)w1(z)c1r2(y)w2(y)c2", True, True, False),
-        ("w1(x)w1(y)r2(u)w1(z)c1w2(x)r2(y)w2(y)c2", True, True, True),
+        # aborted w inbetween
+        (
+            "w1(x)w3(y)a3r2(x)c1a2",  # True,False,False),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (1, "x", 3, False),
+                    (2, "x", 1, True),
+                    (2, "x", 3, False),
+                    (3, "x", 1, False),
+                    (3, "x", 2, False),
+                    (1, "y", 2, False),
+                    (1, "y", 3, False),
+                    (2, "y", 1, False),
+                    (2, "y", 3, False),
+                    (3, "y", 1, False),
+                    (3, "y", 2, False),
+                },
+            ),
+            (False, {(2, "x", 1, True)}),
+            (False, {("w1(x)", "r2(x)", False, False)}),
+        ),
+        # reader aborted
+        (
+            "w1(x)w3(y)a1r2(x)c1c3",  # True,True,True),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (1, "x", 3, False),
+                    (2, "x", 1, False),
+                    (2, "x", 3, False),
+                    (3, "x", 1, False),
+                    (3, "x", 2, False),
+                    (1, "y", 2, False),
+                    (1, "y", 3, False),
+                    (2, "y", 1, False),
+                    (2, "y", 3, False),
+                    (3, "y", 1, False),
+                    (3, "y", 2, False),
+                },
+            ),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (1, "x", 3, False),
+                    (2, "x", 1, False),
+                    (2, "x", 3, False),
+                    (3, "x", 1, False),
+                    (3, "x", 2, False),
+                    (1, "y", 2, False),
+                    (1, "y", 3, False),
+                    (2, "y", 1, False),
+                    (2, "y", 3, False),
+                    (3, "y", 1, False),
+                    (3, "y", 2, False),
+                },
+            ),
+            (True, {("w1(x)", "r2(x)", True, False)}),
+        ),
+        # no read because of abort before read
+        (
+            "w1(x)w3(y)a3r2(x)a1c2",  # False,False,False),
+            (False, {(2, "x", 1, True)}),
+            (False, {(2, "x", 1, True)}),
+            (False, {("w1(x)", "r2(x)", False, False)}),
+        ),
+        # writer aborts at the end
+        (
+            "w1(x)r2(y)a1w2(x)r2(x)w2(y)c2",  # True,True,True),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (True, {("w1(x)", "w2(x)", True, False), ("w1(x)", "r2(x)", True, False)}),
+        ),
+        (
+            "w1(x)r2(y)a1w2(x)r2(x)w2(y)a2",  # True,True,True),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (True, {("w1(x)", "w2(x)", True, False), ("w1(x)", "r2(x)", True, False)}),
+        ),
+        # strict with aborts
+        (
+            "w1(x)r2(y)r1(x)r2(x)c1w2(x)c2",  # True,False,False),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, True),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (False, {(2, "x", 1, True)}),
+            (False, {("w1(x)", "r2(x)", False, False)}),
+        ),
+        (
+            "w1(x)w2(y)r1(y)r2(x)c2w1(y)c1",  # False,False,False),
+            (False, {(2, "x", 1, True)}),
+            (False, {(2, "x", 1, True), (1, "y", 2, True)}),
+            (
+                False,
+                {("w1(x)", "r2(x)", False, False), ("w2(y)", "r1(y)", False, False)},
+            ),
+        ),
+        (
+            "w1(x)r2(y)c1w2(x)r2(x)w2(y)c2",  # True,True,True),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (True, {("w1(x)", "w2(x)", False, True), ("w1(x)", "r2(x)", False, True)}),
+        ),
+        (
+            "w2(x)r1(y)r2(x)r1(x)c2w1(y)c1",  # True,False,False),
+            (
+                True,
+                {
+                    (1, "x", 2, True),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (False, {(1, "x", 2, True)}),
+            (False, {("w2(x)", "r1(x)", False, False)}),
+        ),
+        (
+            "w1(x)w1(y)r2(u)w2(x)r2(y)w2(y)c2w1(z)c1",  # False, False, False),
+            (False, {(2, "y", 1, True)}),
+            (False, {(2, "y", 1, True)}),
+            (
+                False,
+                {
+                    ("w1(x)", "w2(x)", False, False),
+                    ("w1(y)", "r2(y)", False, False),
+                    ("w1(y)", "w2(y)", False, False),
+                },
+            ),
+        ),
+        (
+            "w1(x)w1(y)r2(u)w2(x)r2(y)w2(y)w1(z)c1c2",  # True, False, False),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, True),
+                    (1, "u", 2, False),
+                    (2, "u", 1, False),
+                    (1, "z", 2, False),
+                    (2, "z", 1, False),
+                },
+            ),
+            (False, {(2, "y", 1, True)}),
+            (
+                False,
+                {
+                    ("w1(x)", "w2(x)", False, False),
+                    ("w1(y)", "r2(y)", False, False),
+                    ("w1(y)", "w2(y)", False, False),
+                },
+            ),
+        ),
+        (
+            "w1(x)w1(y)r2(u)w2(x)r2(y)r3(x)w2(z)a2r1(z)c1c3",  # False, False, False),
+            (False, {(3, "x", 2, True)}),
+            (False, {(2, "y", 1, True), (3, "x", 2, True)}),
+            (
+                False,
+                {
+                    ("w1(x)", "w2(x)", False, False),
+                    ("w2(x)", "r3(x)", False, False),
+                    ("w1(x)", "r3(x)", False, False),
+                    ("w1(y)", "r2(y)", False, False),
+                },
+            ),
+        ),
+        (
+            "r1(x)w2(y)r1(x)w3(z)w3(x)r1(y)w1(y)w2(z)w1(z)w3(y)r2(x)c3r2(y)c2w1(y)a1",  # True, False, False),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (1, "x", 3, False),
+                    (2, "x", 1, False),
+                    (2, "x", 3, True),
+                    (3, "x", 1, False),
+                    (3, "x", 2, False),
+                    (1, "y", 2, True),
+                    (1, "y", 3, False),
+                    (2, "y", 1, False),
+                    (2, "y", 3, True),
+                    (3, "y", 1, False),
+                    (3, "y", 2, False),
+                    (1, "z", 2, False),
+                    (1, "z", 3, False),
+                    (2, "z", 1, False),
+                    (2, "z", 3, False),
+                    (3, "z", 1, False),
+                    (3, "z", 2, False),
+                },
+            ),
+            (False, {(2, "x", 3, True), (1, "y", 2, True)}),
+            (
+                False,
+                {
+                    ("w2(y)", "r1(y)", False, False),
+                    ("w2(y)", "w1(y)", False, False),
+                    ("w2(y)", "w3(y)", False, False),
+                    ("w1(y)", "w3(y)", False, False),
+                    ("w1(y)", "r2(y)", False, False),
+                    ("w3(z)", "w2(z)", False, False),
+                    ("w3(z)", "w1(z)", False, False),
+                    ("w2(z)", "w1(z)", False, False),
+                    ("w3(x)", "r2(x)", False, False),
+                },
+            ),
+        ),
+        (
+            "w1(x)r2(y)r1(x)r2(x)c1w2(x)c2",  # True, False, False),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, True),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (False, {(2, "x", 1, True)}),
+            (False, {("w1(x)", "r2(x)", False, False)}),
+        ),
+        (
+            "w1(x)r2(y)c1w2(x)r2(x)w2(y)c2",  # True, True, True),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (True, {("w1(x)", "w2(x)", False, True), ("w1(x)", "r2(x)", False, True)}),
+        ),
+        (
+            "w2(x)r1(y)r2(x)r1(x)c2w1(y)c1",  # True, False, False),
+            (
+                True,
+                {
+                    (1, "x", 2, True),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, False),
+                },
+            ),
+            (False, {(1, "x", 2, True)}),
+            (False, {("w2(x)", "r1(x)", False, False)}),
+        ),
+        (
+            "w1(x)w1(y)r2(u)w2(x)r2(y)w2(y)w1(z)c1c2",  # True, False, False),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, True),
+                    (1, "u", 2, False),
+                    (2, "u", 1, False),
+                    (1, "z", 2, False),
+                    (2, "z", 1, False),
+                },
+            ),
+            (False, {(2, "y", 1, True)}),
+            (
+                False,
+                {
+                    ("w1(x)", "w2(x)", False, False),
+                    ("w1(y)", "r2(y)", False, False),
+                    ("w1(y)", "w2(y)", False, False),
+                },
+            ),
+        ),
+        (
+            "w1(x)w1(y)r2(u)w2(x)w1(z)c1r2(y)w2(y)c2",  # True, True, False),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, True),
+                    (1, "u", 2, False),
+                    (2, "u", 1, False),
+                    (1, "z", 2, False),
+                    (2, "z", 1, False),
+                },
+            ),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, True),
+                    (1, "u", 2, False),
+                    (2, "u", 1, False),
+                    (1, "z", 2, False),
+                    (2, "z", 1, False),
+                },
+            ),
+            (False, {("w1(x)", "w2(x)", False, False)}),
+        ),
+        (
+            "w1(x)w1(y)r2(u)w1(z)c1w2(x)r2(y)w2(y)c2",  # True, True, True)]
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, True),
+                    (1, "u", 2, False),
+                    (2, "u", 1, False),
+                    (1, "z", 2, False),
+                    (2, "z", 1, False),
+                },
+            ),
+            (
+                True,
+                {
+                    (1, "x", 2, False),
+                    (2, "x", 1, False),
+                    (1, "y", 2, False),
+                    (2, "y", 1, True),
+                    (1, "u", 2, False),
+                    (2, "u", 1, False),
+                    (1, "z", 2, False),
+                    (2, "z", 1, False),
+                },
+            ),
+            (
+                True,
+                {
+                    ("w1(x)", "w2(x)", False, True),
+                    ("w1(y)", "r2(y)", False, True),
+                    ("w1(y)", "w2(y)", False, True),
+                },
+            ),
+        ),
     ]
 
-    # A tuple denotes: (schedule, is_2PL, is_C2PL, is_S2PL, is_SS2PL)
+    # A tuple denotes: (schedule, (is_2PL,[errors]), (is_C2PL,[errors]), (is_S2PL,[errors]), (is_SS2PL,[errors]))
     scheduling_tests = [
         (
-            "rl2(e)wl1(x)w1(x)r2(e)rl1(y)r1(y)ru1(y)wu1(x)ru2(e)",
-            True,
-            False,
-            True,
-            True,
+            "r1(y)rl1(y)ru1(y)",  # l1 broken
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
         ),
-        ("wl1(x)w1(x)r2(e)wu1(x)rl1(y)r1(y)ru1(y)", False, False, False, False),
-        ("wl1(x)rl1(y)w1(x)r1(y)ru1(y)wu1(x)", True, True, True, True),
-        ("wl1(x)w1(x)rl1(y)r1(y)ru1(y)wu1(x)", True, False, True, True),
-        ("wl1(x)rl1(y)w1(x)wu1(x)r1(y)ru1(y)", True, True, False, False),
-        ("wl1(x)rl1(y)w1(x)r1(y)ru1(y)wu1(x)", True, True, True, True),
-        ("wl1(x)rl1(y)r1(y)ru1(y)w1(x)wu1(x)", True, True, True, False),
-        ("rl2(y)r2(y)wl3(x)w3(x)wl1(z)w1(z)", True, True, True, True),
+        (
+            "rl1(y)ru1(y)r1(y)",  # l1 broken
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
+        ),
+        (
+            "wl1(x)w1(x)r1(y)wu1(x)",  # l2 broken
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["--Not locked before using: r1(y)"]),
+        ),
+        (
+            "wl1(x)rl1(y)w1(x)r1(y)ru1(y)ru1(y)wu1(x)",  # l3 broken
+            (False, ["--Not locked before unlocking: ru1(y)"]),
+            (False, ["--Not locked before unlocking: ru1(y)"]),
+            (False, ["--Not locked before unlocking: ru1(y)"]),
+            (False, ["--Not locked before unlocking: ru1(y)"]),
+        ),
+        (
+            "wl1(x)rl1(y)w1(x)r1(y)ru1(y)ru1(z)wu1(x)",  # l3 broken
+            (False, ["--Not locked before unlocking: ru1(z)"]),
+            (False, ["--Not locked before unlocking: ru1(z)"]),
+            (False, ["--Not locked before unlocking: ru1(z)"]),
+            (False, ["--Not locked before unlocking: ru1(z)"]),
+        ),
+        (
+            "wl1(x)rl2(x)r2(x)ru2(x)w1(x)wu1(x)",  # l4 broken
+            (
+                False,
+                ["L4: write-lock incompatible with any-lock(s) (rl2(x), [wl1(x)])"],
+            ),
+            (
+                False,
+                ["L4: write-lock incompatible with any-lock(s) (rl2(x), [wl1(x)])"],
+            ),
+            (
+                False,
+                ["L4: write-lock incompatible with any-lock(s) (rl2(x), [wl1(x)])"],
+            ),
+            (
+                False,
+                ["L4: write-lock incompatible with any-lock(s) (rl2(x), [wl1(x)])"],
+            ),
+        ),
+        (
+            "rl1(x)wl2(x)r1(x)ru1(x)w2(x)wu2(x)",  # l4 broken
+            (
+                False,
+                ["L4: write-lock incompatible with read-lock(s) (wl2(x), [rl1(x)])"],
+            ),
+            (
+                False,
+                ["L4: write-lock incompatible with read-lock(s) (wl2(x), [rl1(x)])"],
+            ),
+            (
+                False,
+                ["L4: write-lock incompatible with read-lock(s) (wl2(x), [rl1(x)])"],
+            ),
+            (
+                False,
+                ["L4: write-lock incompatible with read-lock(s) (wl2(x), [rl1(x)])"],
+            ),
+        ),
+        (
+            "wl1(x)w1(x)r2(e)wu1(x)rl1(y)r1(y)ru1(y)",  # 2PL verletzt
+            (
+                False,
+                [
+                    "2PL: Unlocking before all locks set: wu1(x)",
+                    "--Not locked before using: r2(e)",
+                ],
+            ),
+            (
+                False,
+                [
+                    "2PL: Unlocking before all locks set: wu1(x)",
+                    "--Not locked before using: r2(e)",
+                ],
+            ),
+            (
+                False,
+                [
+                    "2PL: Unlocking before all locks set: wu1(x)",
+                    "--Not locked before using: r2(e)",
+                ],
+            ),
+            (
+                False,
+                [
+                    "2PL: Unlocking before all locks set: wu1(x)",
+                    "--Not locked before using: r2(e)",
+                ],
+            ),
+        ),
+        (
+            "rl2(y)r2(y)wl3(x)w3(x)wl1(z)w1(z)",
+            (False, ["--Not all locks removed: ['r2y', 'w3x', 'w1z']"]),
+            (False, ["--Not all locks removed: ['r2y', 'w3x', 'w1z']"]),
+            (False, ["--Not all locks removed: ['r2y', 'w3x', 'w1z']"]),
+            (False, ["--Not all locks removed: ['r2y', 'w3x', 'w1z']"]),
+        ),
+        (
+            "rl2(e)wl1(x)w1(x)r2(e)rl1(y)r1(y)ru1(y)wu1(x)ru2(e)",
+            (True, []),
+            (False, ["Lock [rl1(y)] was acquired after first r/w operation"]),
+            (
+                False,
+                ["Unlocks were not performed immediately after last r/w operation,[2]"],
+            ),
+            (
+                False,
+                ["Unlocks were not performed immediately after last r/w operation,[2]"],
+            ),
+        ),
         (
             "rl1(x)r1(x)wl3(z)w3(z)rl2(x)r2(x)rl3(y)r3(y)wu3(z)ru3(y)"
             "c3rl1(z)r1(z)wl1(z)ru1(x)ru1(z)w1(z)wu1(z)c1wl2(y)ru2(x)"
             "w2(y)wu2(y)c2",
-            True,
-            False,
-            True,
-            False,
+            (True, []),
+            (
+                False,
+                [
+                    "Lock [rl1(z), wl1(z), wl2(y), rl3(y)] was acquired after first r/w operation"
+                ],
+            ),
+            (True, []),
+            (
+                False,
+                ["Unlock [ru1(x), ru1(z), ru2(x)] was done before last r/w operation"],
+            ),
+        ),
+        (
+            "wl1(x)rl1(y)w1(x)wu1(x)r1(y)ru1(y)",
+            (True, []),
+            (True, []),
+            (False, ["Unlock [wu1(x)] was done before last r/w operation"]),
+            (False, ["Unlock [wu1(x)] was done before last r/w operation"]),
         ),
         (
             "wl1(z)rl1(x)w1(z)wu1(z)r1(x)ru1(x)c1wl3(y)rl3(z)wl3(x)"
             "w3(y)wu3(y)r3(z)ru3(z)rl2(y)wl2(z)r2(y)ru2(y)w2(z)wu2(z)"
             "c2w3(x)wu3(x)c3",
-            True,
-            True,
-            False,
-            False,
+            (True, []),
+            (True, []),
+            (False, ["Unlock [wu1(z), wu3(y)] was done before last r/w operation"]),
+            (
+                False,
+                [
+                    "Unlock [wu1(z), ru2(y), wu3(y), ru3(z)] was done before last r/w operation"
+                ],
+            ),
+        ),
+        (
+            "wl1(x)w1(x)rl1(y)r1(y)ru1(y)wu1(x)",
+            (True, []),
+            (False, ["Lock [rl1(y)] was acquired after first r/w operation"]),
+            (True, []),
+            (True, []),
+        ),
+        (
+            "wl1(x)rl1(y)r1(y)ru1(y)w1(x)wu1(x)",
+            (True, []),
+            (True, []),
+            (True, []),
+            (False, ["Unlock [ru1(y)] was done before last r/w operation"]),
+        ),
+        (
+            "wl1(x)rl1(y)w1(x)r1(y)ru1(y)wu1(x)",
+            (True, []),
+            (True, []),
+            (True, []),
+            (True, []),
+        ),
+        (
+            "wl1(x)rl1(y)w1(x)r1(y)ru1(y)wu1(x)",
+            (True, []),
+            (True, []),
+            (True, []),
+            (True, []),
         ),
     ]
 
@@ -224,28 +790,28 @@ class TestTM(ScheduleTest):
         """
         tests is_recoverable(parsed_schedule)
         """
-        for (schedule, is_recoverable, _, _), i in zip(
+        for (schedule, (is_recoverable, proof), _, _), i in zip(
             self.schedule_recoverability_tests,
             range(len(self.schedule_recoverability_tests)),
         ):
             parsed, msg = Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
             actual, result = Recovery.is_recoverable(parsed)
-            # TODO: Check result (i.e., counterexample or proof)
+            self.assertEqual(proof, result, f"Schedule {i}: {schedule, result}")
             self.assertEqual(is_recoverable, actual, f"Schedule {i}: {schedule}")
 
     def test_avoids_cascading_aborts(self):
         """
         tests avoids_cascading_aborts(parsed_schedule)
         """
-        for (schedule, _, avoids_cascading_aborts, _), i in zip(
+        for (schedule, _, (avoids_cascading_aborts, proof), _), i in zip(
             self.schedule_recoverability_tests,
             range(len(self.schedule_recoverability_tests)),
         ):
             parsed, msg = Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
             actual, result = Recovery.avoids_cascading_aborts(parsed)
-            # TODO: Check result (i.e., counterexample or proof)
+            self.assertEqual(proof, result, f"Schedule {i}: {schedule, result}")
             self.assertEqual(
                 avoids_cascading_aborts, actual, f"Schedule {i}: {schedule}"
             )
@@ -254,21 +820,21 @@ class TestTM(ScheduleTest):
         """
         tests is_strict(parsed_schedule)
         """
-        for (schedule, _, _, is_strict), i in zip(
+        for (schedule, _, _, (is_strict, proof)), i in zip(
             self.schedule_recoverability_tests,
             range(len(self.schedule_recoverability_tests)),
         ):
             parsed, msg = Schedule.parse_schedule(schedule)
             self.assertEqual(msg, "")
             actual, result = Recovery.is_strict(parsed)
-            # TODO: Check result (i.e., counterexample or proof)
+            self.assertEqual(proof, result, f"Schedule {i}: {schedule, result}")
             self.assertEqual(is_strict, actual, f"Schedule {i}: {schedule}")
 
     def test_is_2PL(self):
         """
         tests is_2PL(parsed_schedule)
         """
-        for (schedule, is2PL, _, _, _), i in zip(
+        for (schedule, (is2PL, reason), _, _, _), i in zip(
             self.scheduling_tests, range(len(self.scheduling_tests))
         ):
             parsed, msg = Schedule.parse_schedule(schedule)
@@ -278,13 +844,15 @@ class TestTM(ScheduleTest):
                 is2PL, actual, f"Schedule {i}: {schedule}\n Error: {errors}"
             )
             self.assertEqual(not errors, is2PL)
-            # TODO: Check for correct error messages in case of is2PL == False
+            self.assertEqual(
+                reason, errors, f"Schedule {i}: {schedule}\n Error: {errors}"
+            )
 
     def test_is_C2PL(self):
         """
         tests is_C2PL(parsed_schedule)
         """
-        for (schedule, _, isC2PL, _, _), i in zip(
+        for (schedule, _, (isC2PL, reason), _, _), i in zip(
             self.scheduling_tests, range(len(self.scheduling_tests))
         ):
             parsed, msg = Schedule.parse_schedule(schedule)
@@ -294,13 +862,15 @@ class TestTM(ScheduleTest):
                 isC2PL, actual, f"Schedule {i}: {schedule}\n Error: {errors}"
             )
             self.assertEqual(not errors, isC2PL)
-            # TODO: Check for correct error messages in case of isC2PL == False
+            self.assertEqual(
+                reason, errors, f"Schedule {i}: {schedule}\n Error: {errors}"
+            )
 
     def test_is_S2PL(self):
         """
         tests is_S2PL(parsed_schedule)
         """
-        for (schedule, _, _, isS2PL, _), i in zip(
+        for (schedule, _, _, (isS2PL, reason), _), i in zip(
             self.scheduling_tests, range(len(self.scheduling_tests))
         ):
             parsed, msg = Schedule.parse_schedule(schedule)
@@ -309,14 +879,16 @@ class TestTM(ScheduleTest):
             self.assertEqual(
                 isS2PL, actual, f"Schedule {i}: {schedule}\n Error: {errors}"
             )
-            # self.assertEqual(not errors, isS2PL)
-            # TODO: Check for correct error messages in case of isS2PL == False
+            self.assertEqual(not errors, isS2PL)
+            self.assertEqual(
+                reason, errors, f"Schedule {i}: {schedule}\n Error: {errors}"
+            )
 
     def test_is_SS2PL(self):
         """
         tests is_SS2PL(parsed_schedule)
         """
-        for (schedule, _, _, _, isSS2PL), i in zip(
+        for (schedule, _, _, _, (isSS2PL, reason)), i in zip(
             self.scheduling_tests, range(len(self.scheduling_tests))
         ):
             parsed, msg = Schedule.parse_schedule(schedule)
@@ -325,8 +897,10 @@ class TestTM(ScheduleTest):
             self.assertEqual(
                 isSS2PL, actual, f"Schedule {i}: {schedule}\n Error: {errors}"
             )
-            # self.assertEqual(not errors, isSS2PL)
-            # TODO: Check for correct error messages in case of isSS2PL == False
+            self.assertEqual(not errors, isSS2PL)
+            self.assertEqual(
+                reason, errors, f"Schedule {i}: {schedule}\n Error: {errors}"
+            )
 
     def test_compare_schedules(self):
         """

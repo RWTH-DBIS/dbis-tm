@@ -1,4 +1,4 @@
-from dbis_tm.TM import (
+from dbis_tm import (
     Schedule,
     Operation,
     OperationType,
@@ -70,7 +70,7 @@ class Perform_scheduling:
             op_waiting = list(
                 filter(lambda op: op.tx_number == cur_trans, try_next_time)
             )
-            concl = commits.keys()
+            concl = [*commits] + [*aborts]
             values_read = list(
                 filter(
                     lambda op: op.op_type.value == "rl"
@@ -167,7 +167,14 @@ class Perform_scheduling:
                     )
                     counter += 1
                 if transl[cur_trans - 1] == 0:
-                    commits[cur_trans] = counter
+                    if cur_trans in schedule.commits.keys():
+                        commits[cur_trans] = counter
+                    elif cur_trans in schedule.aborts.keys():
+                        aborts[cur_trans] = counter
+                    else:
+                        raise ValueError(
+                            f"{cur_trans} was never closed by the schedule."
+                        )
                     counter += 1
                 # check for new actions possible
                 schedule.operations = try_next_time + schedule.operations[el + 1 :]
@@ -190,7 +197,7 @@ class Perform_scheduling:
                 Schedule(
                     operations, schedule.resources, schedule.tx_count, aborts, commits
                 ),
-                "Deadlock occured",
+                "Deadlock occurred",
             )
         return (
             Schedule(
@@ -241,7 +248,7 @@ class Perform_scheduling:
             op_waiting = list(
                 filter(lambda op: op.tx_number == cur_trans, try_next_time)
             )
-            concl = commits.keys()
+            concl = [*commits] + [*aborts]
             values_read = list(
                 filter(
                     lambda op: op.op_type.value == "rl"
@@ -306,7 +313,12 @@ class Perform_scheduling:
                         )
                     )
                     counter += 1
-                commits[cur_trans] = counter
+                if cur_trans in schedule.commits.keys():
+                    commits[cur_trans] = counter
+                elif cur_trans in schedule.aborts.keys():
+                    aborts[cur_trans] = counter
+                else:
+                    raise ValueError(f"{cur_trans} was never closed by the schedule.")
                 schedule.operations = try_next_time + schedule.operations[el + 1 :]
                 try_next_time = []
                 el = -1
@@ -329,7 +341,7 @@ class Perform_scheduling:
                 Schedule(
                     operations, schedule.resources, schedule.tx_count, aborts, commits
                 ),
-                "Deadlock occured",
+                "Deadlock occurred",
             )
         return (
             Schedule(
@@ -391,7 +403,7 @@ class Perform_scheduling:
             op_waiting = list(
                 filter(lambda op: op.tx_number == cur_trans, try_next_time)
             )
-            concl = commits.keys()
+            concl = [*commits] + [*aborts]
 
             read_lock = list(
                 set(
@@ -523,7 +535,14 @@ class Perform_scheduling:
                     )
                     counter += 1
                 if transl[cur_trans - 1] == 0:
-                    commits[cur_trans] = counter
+                    if cur_trans in schedule.commits.keys():
+                        commits[cur_trans] = counter
+                    elif cur_trans in schedule.aborts.keys():
+                        aborts[cur_trans] = counter
+                    else:
+                        raise ValueError(
+                            f"{cur_trans-1} was never closed by the schedule."
+                        )
                     counter += 1
                 # check for new actions possible
                 schedule.operations = try_next_time + schedule.operations[el + 1 :]
@@ -544,7 +563,7 @@ class Perform_scheduling:
 
 
 def predict_deadlock(schedule: Union[Schedule, str]) -> bool:
-    # can only perform 2SSPL if no deadlock occurs
+    """Checks if all operations can be performed and no deadlock occurs"""
     x, is_deadlock = Perform_scheduling.perform_SS2PL(schedule)
     if is_deadlock != "":
         return True
@@ -553,9 +572,7 @@ def predict_deadlock(schedule: Union[Schedule, str]) -> bool:
 
 class Perform_conflictgraph:
     @classmethod
-    def compute_conflict_quantity(
-        cls, schedule: Union[Schedule, str]
-    ) -> tuple[str, list]:
+    def compute_conflict_quantity(cls, schedule: Union[Schedule, str]) -> list:
         """
         Method to perform the omputing of the conflict set.
         No check for the corectnes of the schedule included. Please check this before using.

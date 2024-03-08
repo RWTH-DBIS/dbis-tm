@@ -1,10 +1,10 @@
-from dbis_tm.Generate import generate
+from Generate import generate
 from dbis_tm.Solution_generator import (
     Perform_conflictgraph,
     Perform_scheduling,
     predict_deadlock,
 )
-from dbis_tm.TM import Schedule
+from dbis_tm import Schedule
 from dbis_tm.TMSolver import Serializability, Recovery
 import random
 from IPython.display import display

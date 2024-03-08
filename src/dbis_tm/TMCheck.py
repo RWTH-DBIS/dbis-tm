@@ -7,7 +7,7 @@ Created on 2022-07-06
 
 """
 import re
-from dbis_tm.TM import Schedule
+from dbis_tm import Schedule
 from dbis_tm.TMSolver import Scheduling, Recovery, Serializability
 from dbis_tm.Solution_generator import Perform_conflictgraph
 from typing import Union
