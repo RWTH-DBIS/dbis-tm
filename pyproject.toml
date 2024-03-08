@@ -1,6 +1,6 @@
 [project]
 name="dbis-tm"
-version='0.0.11'
+version='0.0.12'
 description="RWTH Aachen Computer Science i5/dbis assets for Lecture Datenbanken und Informationssysteme"
 
 authors = [
@@ -18,6 +18,15 @@ dependencies = [
 	"dbis-exc-manager~=0.3"
 ]
 
+[project.optional-dependencies]
+test = [
+    "black==23.12.1"
+]
+build = [
+    "twine==4.*",
+    "build==1.*"
+]
+
 [project.urls]
 "Homepage" = "https://git.rwth-aachen.de/i5/teaching/dbis/dbis-tm"
 
@@ -27,3 +36,6 @@ include_package_data = true
 [build-system]
 requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+required-version = 23

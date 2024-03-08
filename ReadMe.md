@@ -23,7 +23,7 @@ Zu den folgenden Kategorien verfügt das TM Paket auch über 2 Parsing Funktione
 
 # Aufgabenerstellung
 ## Übungsblätter
-Es existiert eine Datei: _Generate_Tasks.py_ welche eine Infrastruktur bereitstellt um Aufgaben für die Übungsblätter zu erstellen. Ein Beispiel der Funktionsweise ist in _playground.py_ hinterlegt. Die erzeugten Schedules müssen dann nur noch in das Übungsblatt eingefügt werden. Es lohnt sich diese Aufgaben an einem Ort abzuspeichern, da die Erzeugung jedes Mal neu passiert und somit keine Aufgabe genauso nochmal erzeugt werden kann.
+Es existiert eine Datei: _Generate_Tasks.py_ welche eine Infrastruktur bereitstellt um Aufgaben für die Übungsblätter zu erstellen. Es lohnt sich diese Aufgaben an einem Ort abzuspeichern, da die Erzeugung jedes Mal neu passiert und somit keine Aufgabe genauso nochmal erzeugt werden kann.
 
 **Bitte auch auf Textänderungen achten die eventuell entstehen müssen.**\
 In diesem Datensatz sind auch die Lösungen enthalten, für die Erstellung einer Muserlösung.
@@ -56,8 +56,6 @@ In der **dritten** Liste sind die Aufgaben und Lösungen zum **Scheduling**:
 - _Aufgabe-c_: [schedule1: String, klasse: char]
 - _Lösung-c_: [performed-schedule: schedule]
 
-## Klausuraufgaben
-Für Klausuraufgaben ist auch eine Beispielerzeugung in _playground.py_ hinderlegt. Dort wird eine Auswahl an Schedules erzeugt. Diese können in die Dynaxite logik eingefügt werden und somit eine zufälligere Aufgabenverteilung ermöglichen. Es existiert eine Beispielaufgabe in Dynaxite, aber es gibt sicherlich noch mehr Anwendungsmöglichkeiten.
 # 1.Generator
 **Neu**
 Der Generator kann drei unterschiedliche Arten von Schedules erzeugen:
@@ -70,7 +68,11 @@ Die Generator Funktion liegt in der Datei _Generate.py_ und heißt _generate\_sc
 ## Die Funktion
 `generate (transactions: int, resources: list[str], deadlock (optional): bool, recovery (optional): str)-> tuple[Schedule, str]`
 
-**Es ist nicht möglich eine Angabe zu deadlcok und recovery zu machen!**  In diesem Fall wird ein Error geworfen.
+**- Es ist nicht möglich eine Angabe zu deadlcok und recovery zu machen!**\
+**- Für Recovery werden mindestens 2 Transaktionen benötigt.**\
+**- Für Deadlock werden mindestens 2 Transaktionen und 2 Resourcen benötigt!**\
+In diesen Fällen wird ein Fehler ausgegeben.
+
 - _transactions_: Anzahl an zu erzeugenden Transaktionen [t_1,...]. Die Transaktionen sind immer von 1 bis m durchnummeriert.   
     - Beispiel Eingabe: 3 
 - _resources_: Name der Ressourcen. Erwartet eine Liste an chars.        

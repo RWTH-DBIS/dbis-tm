@@ -9,7 +9,7 @@ from dbis_tm.TMCheck import (
     RecoveryScorer,
     ScheduleScorer,
 )
-from dbis_tm.TM import ConflictGraph, ConflictGraphNode
+from dbis_tm import ConflictGraph, ConflictGraphNode
 from tests.scheduletest import ScheduleTest
 
 
@@ -279,118 +279,193 @@ class TestTMScorer(ScheduleTest):
             schedule = example["schedule"]
             result = example["result"]
             check = example["check"]
+            correct = example["correct"]
             sScorer = ScheduleScorer()
             score = sScorer.getScore(schedule, result, check, max_points=1)
             if debug:
                 print(f"{i+1}: score={score}")
-            self.assertEqual(1, score)
+            if correct:
+                self.assertEqual(1, score)
+            else:
+                self.assertEqual(0, score)
 
-    # def grade_recovery(self,schedule,isClassList,proofList,max_score):
-    #     rs=RecoveryScorer()
-    #     name="?"
-    #     result=(tuple(isClassList),tuple(proofList))
-    #     score=rs.score_proof(name,schedule,result, max_score)
-    #     return score
+    def grade_recovery(self, schedule, isClassList, proofList, max_score):
+        rs = RecoveryScorer()
+        name = "?"
+        result = (tuple(isClassList), tuple(proofList))
+        score = rs.score_recovery(name, schedule, result, max_score)
+        return score
 
-    # def testGradeRecovery(self):
-    #     """
-    #     test Grade Recovery
-    #     """
-    #     # No points
-    #     rc_proof = {}
-    #     is_rc = None
-    #     aca_proof = {}
-    #     is_aca = None
-    #     st_proof = {}
-    #     is_st = None
-    #     self.assertEqual(0,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+    def testGradeRecovery(self):
+        """
+        test Grade Recovery
+        """
+        # No points
+        rc_proof = {}
+        is_rc = None
+        aca_proof = {}
+        is_aca = None
+        st_proof = {}
+        is_st = None
+        self.assertEqual(
+            0,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # No points, is in rc but no proof given
-    #     is_rc = True
-    #     is_aca = None
-    #     is_st = None
-    #     self.assertEqual(0,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # No points, is in rc but no proof given
+        is_rc = True
+        is_aca = None
+        is_st = None
+        self.assertEqual(
+            0,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # No points, is in rc but no proof given
-    #     is_rc = True
-    #     is_aca = True
-    #     is_st = True
-    #     self.assertEqual(0,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # No points, is in rc but no proof given
+        is_rc = True
+        is_aca = True
+        is_st = True
+        self.assertEqual(
+            0,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # Gets 0 because is_aca was not shown although is_st == False is correct
-    #     is_rc = True
-    #     is_aca = False
-    #     is_st = False
-    #     self.assertEqual(0,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # Gets 0 because is_aca was not shown although is_st == False is correct
+        is_rc = True
+        is_aca = False
+        is_st = False
+        self.assertEqual(
+            0,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # Gets 0 because is_st is correct but is_aca was not shown
-    #     is_rc = True
-    #     is_aca = True
-    #     is_st = False
-    #     self.assertEqual(0,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # Gets 0 because is_st is correct but is_aca was not shown
+        is_rc = True
+        is_aca = True
+        is_st = False
+        self.assertEqual(
+            0,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # Gets 2 / 3 because is_aca (cex given)
-    #     is_rc = None
-    #     is_aca = False
-    #     aca_proof = {(1, 'y', 2, True)}
-    #     is_st = None
-    #     self.assertEqual(2 / 3,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # Gets 2 / 3 because is_aca (cex given)
+        is_rc = None
+        is_aca = False
+        aca_proof = {(1, "y", 2, True)}
+        is_st = None
+        self.assertEqual(
+            2 / 3,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # Gets 2 * (2 / 3) because is_aca (cex given) and is_st is correct
-    #     is_rc = True
-    #     is_aca = False
-    #     aca_proof = {(1, 'y', 2, True)}
-    #     is_st = False
-    #     self.assertEqual(4 / 3,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # Gets 2 * (2 / 3) because is_aca (cex given) and is_st is correct
+        is_rc = True
+        is_aca = False
+        aca_proof = {(1, "y", 2, True)}
+        is_st = False
+        self.assertEqual(
+            4 / 3,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # Gets 0 points because is_aca (cex given) but bool is not set
-    #     is_rc = None
-    #     is_aca = None
-    #     aca_proof = {(1, 'y', 2, True)}
-    #     is_st = None
-    #     self.assertEqual(0,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # Gets 0 points because is_aca (cex given) but bool is not set
+        is_rc = None
+        is_aca = None
+        aca_proof = {(1, "y", 2, True)}
+        is_st = None
+        self.assertEqual(
+            0,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # Gets 2 / 3 points because is_aca (cex given) and bool is set
-    #     is_rc = None
-    #     is_aca = False
-    #     aca_proof = {(1, 'y', 2, True)}
-    #     is_st = None
-    #     self.assertEqual(2 / 3,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # Gets 2 / 3 points because is_aca (cex given) and bool is set
+        is_rc = None
+        is_aca = False
+        aca_proof = {(1, "y", 2, True)}
+        is_st = None
+        self.assertEqual(
+            2 / 3,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # Gets 0 points because is_aca == False was not shown although is_st == False is correct
-    #     is_rc = None
-    #     is_aca = None
-    #     aca_proof = {}
-    #     is_st = False
-    #     self.assertEqual(0,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # Gets 0 points because is_aca == False was not shown although is_st == False is correct
+        is_rc = None
+        is_aca = None
+        aca_proof = {}
+        is_st = False
+        self.assertEqual(
+            0,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )
 
-    #     # Gets 2 points (correct solution)
-    #     is_rc = True
-    #     rc_proof = {(1, 'z', 2, False), (2, 'y', 1, False), (1, 'y', 2, True), (2, 'z', 1, False)}
-    #     is_aca = False
-    #     aca_proof = {(1, 'y', 2, True)}
-    #     is_st = False
-    #     st_proof = {}
-    #     self.assertEqual(2,
-    #                      self.grade_recovery("w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1", [is_rc, is_aca, is_st],
-    #                                             [rc_proof, aca_proof, st_proof], 2))
+        # Gets 2 points (correct solution)
+        is_rc = True
+        rc_proof = {
+            (1, "z", 2, False),
+            (2, "y", 1, False),
+            (1, "y", 2, True),
+            (2, "z", 1, False),
+        }
+        is_aca = False
+        aca_proof = {(1, "y", 2, True)}
+        is_st = False
+        st_proof = {}
+        self.assertEqual(
+            2,
+            self.grade_recovery(
+                "w_2(y) r_1(z) r_2(y) r_1(y) c_2 w_1(y) c_1",
+                [is_rc, is_aca, is_st],
+                [rc_proof, aca_proof, st_proof],
+                2,
+            ),
+        )

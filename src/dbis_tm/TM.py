@@ -78,6 +78,24 @@ class Operation:
             and self.resource == obj.resource
         )
 
+    def __sr__(self, obj):
+        """True if operations of same trans and on same resource"""
+        return (
+            isinstance(obj, Operation)
+            and self.tx_number == obj.tx_number
+            and self.resource == obj.resource
+        )
+
+    def __same__(self, obj):
+        """Is the same operation"""
+        return (
+            isinstance(obj, Operation)
+            and self.op_type == obj.op_type
+            and self.tx_number == obj.tx_number
+            and self.resource == obj.resource
+            and self.index == obj.index
+        )
+
 
 class Schedule:
     """
@@ -117,6 +135,36 @@ class Schedule:
         return (
             f"Schedule[operations: {self.operations}, resources: {self.resources}, tx_count: {self.tx_count}, "
             f"aborts: {self.aborts}, commits: {self.commits}]"
+        )
+
+    def active(self) -> list[int]:
+        """Returns the still active transactions."""
+        return [
+            i
+            for i in range(1, self.tx_count + 1)
+            if i not in self.aborts.keys() and i not in self.commits.keys()
+        ]
+
+    def next_index(self):
+        """Returns the next unused index"""
+        if self.operations:
+            return (
+                max(
+                    [0]
+                    + [self.operations[-1].index]
+                    + list(self.aborts.values())
+                    + list(self.commits.values())
+                )
+                + 1
+            )
+        else:
+            return 1
+
+    def op_trans(self, transaction: int) -> int:
+        """Returns how many operations one transaction perfomed"""
+        return max(
+            0,
+            len([op for op in self.operations if op.tx_number == transaction]),
         )
 
     @classmethod
