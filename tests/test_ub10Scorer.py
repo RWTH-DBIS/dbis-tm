@@ -3,7 +3,7 @@ Created on 2022-07-16
 
 @author: wf
 """
-from dbis_tm.TMCheck import (
+from src.dbis_tm.TMCheck import (
     ConflictSetScorer,
     ConflictSerializationScorer,
     RecoveryScorer,
@@ -44,12 +44,28 @@ class TestTMScorer(ScheduleTest):
                 "expected": 4.0,
             }
         ]
-        solution1 = "w2(x) r2(x) w1(z) r1(x) w3(y) a3 w2(z) c1 c2 "  # {("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")}
-        solution2 = "r2(x) w3(x) w1(y) r2(y) w2(y) w3(y) w3(z) w1(z) w2(z) r1(y) w2(y)"
-        # {("r_2(x)", "w_3(x)"),- ("w_1(y)", "r_2(y)"), ("w_1(y)", "w_2(y)"), ("w_1(y)", "w_3(y)"),- ("w_3(z)", "w_1(z)"), ("w_3(z)", "w_2(z)"), ("r_2(y)", "w_3(y)"),
-        #  ("w_2(y)", "w_3(y)"), ("w_2(y)", "r_1(y)"), ("w_1(z)", "w_2(z)"), ("w_3(y)", "r_1(y)"), ("w_3(y)", "w_2(y)"), ("r_1(y)", "w_2(y)")}
+        solution1 = {
+            ("w_2(x)", "r_1(x)"),
+            ("w_1(z)", "w_2(z)"),
+        }  # "w2(x) r2(x) w1(z) r1(x) w3(y) a3 w2(z) c1 c2 "
+        solution2 = {
+            ("r_2(x)", "w_3(x)"),
+            ("w_1(y)", "r_2(y)"),
+            ("w_1(y)", "w_2(y)"),
+            ("w_1(y)", "w_3(y)"),
+            ("w_3(z)", "w_1(z)"),
+            ("w_3(z)", "w_2(z)"),
+            ("r_2(y)", "w_3(y)"),
+            ("w_2(y)", "w_3(y)"),
+            ("w_2(y)", "r_1(y)"),
+            ("w_1(z)", "w_2(z)"),
+            ("w_3(y)", "r_1(y)"),
+            ("w_3(y)", "w_2(y)"),
+            ("r_1(y)", "w_2(y)"),
+        }
+        # "r2(x) w3(x) w1(y) r2(y) w2(y) w3(y) w3(z) w1(z) w2(z) r1(y) w2(y)"
         max_points = 4
-        debug = True
+        debug = False
         for i, example in enumerate(examples):
             result1 = example["result1"]
             result2 = example["result2"]
@@ -86,6 +102,10 @@ class TestTMScorer(ScheduleTest):
 
         conf_g3 = ConflictGraph()
         conf_g3.add_edge(t1, t2)
+
+        conf_g4 = ConflictGraph("s5")
+        conf_g4.add_edge(t1, t3)
+        conf_g4.add_edge(t3, t1)
         examples = [
             {
                 "name": "s3",
@@ -108,6 +128,13 @@ class TestTMScorer(ScheduleTest):
                 "serializable": False,
                 "expected": 1.5,
             },
+            {
+                "name": "s5",
+                "result": conf_g4,
+                "schedule": schedule2,
+                "serializable": False,
+                "expected": 1.5,
+            },
         ]
         debug = False
         for i, example in enumerate(examples):
@@ -121,7 +148,6 @@ class TestTMScorer(ScheduleTest):
             score = css.score_conflictSerialization(
                 name, result, serializableResult, schedule, 1.5
             )
-            print(score)
             if debug:
                 print(f"{i+1} score: {score} expected: {expected}")
             self.assertEqual(expected, score)

@@ -347,11 +347,11 @@ class Scheduling:
                 # check wether both write
                 if [t for t in conflict if t.op_type == OperationType.WRITE_LOCK]:
                     errors.append(
-                        f"L4: write-lock incompatible with any-lock(s) {i, conflict}"
+                        f"L4: Schreibsperre inkompatibel mit allen andeden Sperren {i, conflict}"
                     )
                 elif conflict and i.op_type == OperationType.WRITE_LOCK:
                     errors.append(
-                        f"L4: write-lock incompatible with read-lock(s) {i, conflict}"
+                        f"L4: Schreibsperre inkompatibel mit Lesesperren {i, conflict}"
                     )
                 else:
                     locks_compatibility.append(i)
@@ -411,13 +411,13 @@ class Scheduling:
                         locks_set.append(representation)
                         missed_locks.append(representation)
                     else:
-                        errors.append(f"--Double lock: {j}")
+                        errors.append(f"L1/L2: Doppelte Sperre: {j}")
                 elif (
                     current_op == OperationType.WRITE
                     or current_op == OperationType.READ
                 ):
                     if representation not in locks_set:
-                        errors.append(f"--Not locked before using: {j}")
+                        errors.append(f"L2: Nicht gesperrt vor Ausführung: {j}")
                 elif (
                     current_op == OperationType.WRITE_UNLOCK
                     or current_op == OperationType.READ_UNLOCK
@@ -427,12 +427,14 @@ class Scheduling:
                             locks_set.remove(representation)
                             missed_locks.remove(representation)
                         else:
-                            errors.append(f"--Not locked before unlocking: {j}")
+                            errors.append(f"L3: Nicht gesperrt vor entsperren: {j}")
                     else:
-                        errors.append(f"2PL: Unlocking before all locks set: {j}")
+                        errors.append(
+                            f"2PL: Entsperren bevor alle anderen Sperren gesetzt sind: {j}"
+                        )
                         missed_locks.remove(representation)
         if missed_locks:
-            errors.append(f"--Not all locks removed: {missed_locks}")
+            errors.append(f"L1: Nicht alle Sperren aufgehoben: {missed_locks}")
         is2PL = not errors
         return is2PL, errors
 
@@ -481,7 +483,9 @@ class Scheduling:
                     and tx_ops.index(op) > index_first_op
                 ]
         if locks:
-            return False, [f"Lock {locks} was acquired after first r/w operation"]
+            return False, [
+                f"C2PL: Sperren {locks} wurden nach der ersten r/w Operation gesetzt"
+            ]
         return True, []
 
     @classmethod
@@ -533,10 +537,12 @@ class Scheduling:
             elif len(final_unlocks) + index_last_op != final_unlocks[-1].index:
                 late_unlocks += [i]
         if early_unlocks:
-            errors += [f"Unlock {early_unlocks} was done before last r/w operation"]
+            errors += [
+                f"S2PL: {early_unlocks} wurden vor der letzten r/w Operation entsperrt"
+            ]
         if late_unlocks:
             errors += [
-                f"Unlocks were not performed immediately after last r/w operation,{late_unlocks}"
+                f"S2PL: Entsperren von {late_unlocks} ist nicht direkt nach der letzten r/w Operation erfolgt"
             ]
         if errors:
             return False, errors
@@ -602,10 +608,12 @@ class Scheduling:
                 late_unlocks.append(i)
         if late_unlocks:
             errors.append(
-                f"Unlocks were not performed immediately after last r/w operation,{late_unlocks}"
+                f"SS2PL: Entsperren von {late_unlocks} ist nicht direkt nach der letzten r/w Operation erfolgt"
             )
         if early_unlocks:
-            errors.append(f"Unlock {early_unlocks} was done before last r/w operation")
+            errors.append(
+                f"SS2PL: {early_unlocks} wurde vor der letzten r/w Operation entsperrt"
+            )
         if errors:
             return False, errors
         return True, []
