@@ -6,8 +6,8 @@ Created 2022-05
 @author: Wolfgang
 """
 from dbis_tm import Schedule, ConflictGraph, ConflictGraphNode
-from dbis_tm.TMSolver import Recovery, Scheduling, Serializability
-from dbis_tm.TMCheck import SyntaxCheck, ScheduleCheck
+from src.dbis_tm.TMSolver import Recovery, Scheduling, Serializability
+from src.dbis_tm.TMCheck import SyntaxCheck
 from tests.scheduletest import ScheduleTest
 
 
@@ -499,75 +499,83 @@ class TestTM(ScheduleTest):
     scheduling_tests = [
         (
             "r1(y)rl1(y)ru1(y)",  # l1 broken
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
         ),
         (
             "rl1(y)ru1(y)r1(y)",  # l1 broken
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
         ),
         (
             "wl1(x)w1(x)r1(y)wu1(x)",  # l2 broken
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
-            (False, ["--Not locked before using: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
+            (False, ["L2: Nicht gesperrt vor Ausführung: r1(y)"]),
         ),
         (
             "wl1(x)rl1(y)w1(x)r1(y)ru1(y)ru1(y)wu1(x)",  # l3 broken
-            (False, ["--Not locked before unlocking: ru1(y)"]),
-            (False, ["--Not locked before unlocking: ru1(y)"]),
-            (False, ["--Not locked before unlocking: ru1(y)"]),
-            (False, ["--Not locked before unlocking: ru1(y)"]),
+            (False, ["L3: Nicht gesperrt vor entsperren: ru1(y)"]),
+            (False, ["L3: Nicht gesperrt vor entsperren: ru1(y)"]),
+            (False, ["L3: Nicht gesperrt vor entsperren: ru1(y)"]),
+            (False, ["L3: Nicht gesperrt vor entsperren: ru1(y)"]),
         ),
         (
             "wl1(x)rl1(y)w1(x)r1(y)ru1(y)ru1(z)wu1(x)",  # l3 broken
-            (False, ["--Not locked before unlocking: ru1(z)"]),
-            (False, ["--Not locked before unlocking: ru1(z)"]),
-            (False, ["--Not locked before unlocking: ru1(z)"]),
-            (False, ["--Not locked before unlocking: ru1(z)"]),
+            (False, ["L3: Nicht gesperrt vor entsperren: ru1(z)"]),
+            (False, ["L3: Nicht gesperrt vor entsperren: ru1(z)"]),
+            (False, ["L3: Nicht gesperrt vor entsperren: ru1(z)"]),
+            (False, ["L3: Nicht gesperrt vor entsperren: ru1(z)"]),
         ),
         (
             "wl1(x)rl2(x)r2(x)ru2(x)w1(x)wu1(x)",  # l4 broken
             (
                 False,
-                ["L4: write-lock incompatible with any-lock(s) (rl2(x), [wl1(x)])"],
+                [
+                    "L4: Schreibsperre inkompatibel mit allen andeden Sperren (rl2(x), [wl1(x)])"
+                ],
             ),
             (
                 False,
-                ["L4: write-lock incompatible with any-lock(s) (rl2(x), [wl1(x)])"],
+                [
+                    "L4: Schreibsperre inkompatibel mit allen andeden Sperren (rl2(x), [wl1(x)])"
+                ],
             ),
             (
                 False,
-                ["L4: write-lock incompatible with any-lock(s) (rl2(x), [wl1(x)])"],
+                [
+                    "L4: Schreibsperre inkompatibel mit allen andeden Sperren (rl2(x), [wl1(x)])"
+                ],
             ),
             (
                 False,
-                ["L4: write-lock incompatible with any-lock(s) (rl2(x), [wl1(x)])"],
+                [
+                    "L4: Schreibsperre inkompatibel mit allen andeden Sperren (rl2(x), [wl1(x)])"
+                ],
             ),
         ),
         (
             "rl1(x)wl2(x)r1(x)ru1(x)w2(x)wu2(x)",  # l4 broken
             (
                 False,
-                ["L4: write-lock incompatible with read-lock(s) (wl2(x), [rl1(x)])"],
+                ["L4: Schreibsperre inkompatibel mit Lesesperren (wl2(x), [rl1(x)])"],
             ),
             (
                 False,
-                ["L4: write-lock incompatible with read-lock(s) (wl2(x), [rl1(x)])"],
+                ["L4: Schreibsperre inkompatibel mit Lesesperren (wl2(x), [rl1(x)])"],
             ),
             (
                 False,
-                ["L4: write-lock incompatible with read-lock(s) (wl2(x), [rl1(x)])"],
+                ["L4: Schreibsperre inkompatibel mit Lesesperren (wl2(x), [rl1(x)])"],
             ),
             (
                 False,
-                ["L4: write-lock incompatible with read-lock(s) (wl2(x), [rl1(x)])"],
+                ["L4: Schreibsperre inkompatibel mit Lesesperren (wl2(x), [rl1(x)])"],
             ),
         ),
         (
@@ -575,50 +583,57 @@ class TestTM(ScheduleTest):
             (
                 False,
                 [
-                    "2PL: Unlocking before all locks set: wu1(x)",
-                    "--Not locked before using: r2(e)",
+                    "2PL: Entsperren bevor alle anderen Sperren gesetzt sind: wu1(x)",
+                    "L2: Nicht gesperrt vor Ausführung: r2(e)",
                 ],
             ),
             (
                 False,
                 [
-                    "2PL: Unlocking before all locks set: wu1(x)",
-                    "--Not locked before using: r2(e)",
+                    "2PL: Entsperren bevor alle anderen Sperren gesetzt sind: wu1(x)",
+                    "L2: Nicht gesperrt vor Ausführung: r2(e)",
                 ],
             ),
             (
                 False,
                 [
-                    "2PL: Unlocking before all locks set: wu1(x)",
-                    "--Not locked before using: r2(e)",
+                    "2PL: Entsperren bevor alle anderen Sperren gesetzt sind: wu1(x)",
+                    "L2: Nicht gesperrt vor Ausführung: r2(e)",
                 ],
             ),
             (
                 False,
                 [
-                    "2PL: Unlocking before all locks set: wu1(x)",
-                    "--Not locked before using: r2(e)",
+                    "2PL: Entsperren bevor alle anderen Sperren gesetzt sind: wu1(x)",
+                    "L2: Nicht gesperrt vor Ausführung: r2(e)",
                 ],
             ),
         ),
         (
             "rl2(y)r2(y)wl3(x)w3(x)wl1(z)w1(z)",
-            (False, ["--Not all locks removed: ['r2y', 'w3x', 'w1z']"]),
-            (False, ["--Not all locks removed: ['r2y', 'w3x', 'w1z']"]),
-            (False, ["--Not all locks removed: ['r2y', 'w3x', 'w1z']"]),
-            (False, ["--Not all locks removed: ['r2y', 'w3x', 'w1z']"]),
+            (False, ["L1: Nicht alle Sperren aufgehoben: ['r2y', 'w3x', 'w1z']"]),
+            (False, ["L1: Nicht alle Sperren aufgehoben: ['r2y', 'w3x', 'w1z']"]),
+            (False, ["L1: Nicht alle Sperren aufgehoben: ['r2y', 'w3x', 'w1z']"]),
+            (False, ["L1: Nicht alle Sperren aufgehoben: ['r2y', 'w3x', 'w1z']"]),
         ),
         (
             "rl2(e)wl1(x)w1(x)r2(e)rl1(y)r1(y)ru1(y)wu1(x)ru2(e)",
             (True, []),
-            (False, ["Lock [rl1(y)] was acquired after first r/w operation"]),
             (
                 False,
-                ["Unlocks were not performed immediately after last r/w operation,[2]"],
+                ["C2PL: Sperren [rl1(y)] wurden nach der ersten r/w Operation gesetzt"],
             ),
             (
                 False,
-                ["Unlocks were not performed immediately after last r/w operation,[2]"],
+                [
+                    "S2PL: Entsperren von [2] ist nicht direkt nach der letzten r/w Operation erfolgt"
+                ],
+            ),
+            (
+                False,
+                [
+                    "SS2PL: Entsperren von [2] ist nicht direkt nach der letzten r/w Operation erfolgt"
+                ],
             ),
         ),
         (
@@ -629,21 +644,23 @@ class TestTM(ScheduleTest):
             (
                 False,
                 [
-                    "Lock [rl1(z), wl1(z), wl2(y), rl3(y)] was acquired after first r/w operation"
+                    "C2PL: Sperren [rl1(z), wl1(z), wl2(y), rl3(y)] wurden nach der ersten r/w Operation gesetzt"
                 ],
             ),
             (True, []),
             (
                 False,
-                ["Unlock [ru1(x), ru1(z), ru2(x)] was done before last r/w operation"],
+                [
+                    "SS2PL: [ru1(x), ru1(z), ru2(x)] wurde vor der letzten r/w Operation entsperrt"
+                ],
             ),
         ),
         (
             "wl1(x)rl1(y)w1(x)wu1(x)r1(y)ru1(y)",
             (True, []),
             (True, []),
-            (False, ["Unlock [wu1(x)] was done before last r/w operation"]),
-            (False, ["Unlock [wu1(x)] was done before last r/w operation"]),
+            (False, ["S2PL: [wu1(x)] wurden vor der letzten r/w Operation entsperrt"]),
+            (False, ["SS2PL: [wu1(x)] wurde vor der letzten r/w Operation entsperrt"]),
         ),
         (
             "wl1(z)rl1(x)w1(z)wu1(z)r1(x)ru1(x)c1wl3(y)rl3(z)wl3(x)"
@@ -651,18 +668,26 @@ class TestTM(ScheduleTest):
             "c2w3(x)wu3(x)c3",
             (True, []),
             (True, []),
-            (False, ["Unlock [wu1(z), wu3(y)] was done before last r/w operation"]),
             (
                 False,
                 [
-                    "Unlock [wu1(z), ru2(y), wu3(y), ru3(z)] was done before last r/w operation"
+                    "S2PL: [wu1(z), wu3(y)] wurden vor der letzten r/w Operation entsperrt"
+                ],
+            ),
+            (
+                False,
+                [
+                    "SS2PL: [wu1(z), ru2(y), wu3(y), ru3(z)] wurde vor der letzten r/w Operation entsperrt"
                 ],
             ),
         ),
         (
             "wl1(x)w1(x)rl1(y)r1(y)ru1(y)wu1(x)",
             (True, []),
-            (False, ["Lock [rl1(y)] was acquired after first r/w operation"]),
+            (
+                False,
+                ["C2PL: Sperren [rl1(y)] wurden nach der ersten r/w Operation gesetzt"],
+            ),
             (True, []),
             (True, []),
         ),
@@ -671,7 +696,7 @@ class TestTM(ScheduleTest):
             (True, []),
             (True, []),
             (True, []),
-            (False, ["Unlock [ru1(y)] was done before last r/w operation"]),
+            (False, ["SS2PL: [ru1(y)] wurde vor der letzten r/w Operation entsperrt"]),
         ),
         (
             "wl1(x)rl1(y)w1(x)r1(y)ru1(y)wu1(x)",
@@ -929,7 +954,7 @@ class TestTM(ScheduleTest):
             print(gvMarkup)
         self.assertTrue(
             """{
-	graph [label="Conflict Graph"]
+	graph [label="Konfliktgraph "]
 }"""
             in str(gvMarkup)
         )
@@ -943,8 +968,8 @@ class TestTM(ScheduleTest):
         """
         test the SyntaxCheck functionality for Conflicts
         """
-        s1_conf = [("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")]
-        s2_conf = [
+        s1_conf = {("w_2(x)", "r_1(x)"), ("w_1(z)", "w_2(z)")}
+        s2_conf = {
             ("r_2(x)", "w_3(x)"),
             ("w_1(y)", "r_2(y)"),
             ("w_1(y)", "w_2(y)"),
@@ -958,24 +983,24 @@ class TestTM(ScheduleTest):
             ("w_3(y)", "r_1(y)"),
             ("w_3(y)", "w_2(y)"),
             ("r_1(y)", "w_2(y)"),
-        ]
-        conf_err1 = {}
-        conf_err2 = []
+        }
+        conf_err1 = []
+        conf_err2 = {}
         conf_err3 = "Garbage"
-        conf_err4 = [("a"), ("b", "c", "e")]
-        conf_err5 = [("a_3(x)", "b")]
+        conf_err4 = {("a"), ("b", "c", "e")}
+        conf_err5 = {("a_3(x)", "b")}
         debug = False
         expectedList = [
             None,
             None,
-            "{} ist keine Liste",
+            "[] ist kein Set",
             None,
-            "Garbage ist keine Liste",
+            "Garbage ist kein Set",
             (
-                "Das Tupel ('b', 'c', 'e') von [('b', 'c', 'e'), 'a'] ist kein Paar",
-                "Das Tupel a von ['a', ('b', 'c', 'e')] ist kein Paar",
+                "Das Tupel ('b', 'c', 'e') von {('b', 'c', 'e'), 'a'} ist kein Paar",
+                "Das Tupel a von {'a', ('b', 'c', 'e')} ist kein Paar",
             ),
-            "Das Tupel ('a_3(x)', 'b') von [('a_3(x)', 'b')] hat keine korrekte Syntax",
+            "Das Tupel ('a_3(x)', 'b') von {('a_3(x)', 'b')} hat keine korrekte Syntax",
         ]
         for i, conf in enumerate(
             [s1_conf, s2_conf, conf_err1, conf_err2, conf_err3, conf_err4, conf_err5]

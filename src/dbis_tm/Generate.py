@@ -1,13 +1,14 @@
 from dbis_tm import Schedule, OperationType, Operation
 import random, copy
-from dbis_tm.Solution_generator import predict_deadlock
+from src.dbis_tm.Solution_generator import predict_deadlock
 
 
 def generate(
     transactions: int, resources: list[str], deadlock=None, recovery=None
 ) -> tuple[Schedule, str]:
     """Generates a schedule
-    Gets:
+
+    Args:
         - transactions:int
         - resources: [char]
         - either deadlock: Bool
@@ -44,6 +45,13 @@ class Generator:
     """
 
     def __init__(self, transactions: list, resources: list[str]):
+        """
+        Constructor
+
+        Args:
+            transactions(list): number of transactions
+            resources(list[str]): list of resources
+        """
         # initiate schedule
         self.schedule = Schedule([], resources, transactions, dict(), dict())
         # initiate resources
@@ -56,6 +64,12 @@ class Generator:
         self.close_trans = [False for _ in range(transactions)]
 
     def check_circle(self, transactions: list) -> bool:
+        """
+        Function to check whether the given lists of transactions which are waiting on each other contain a cycle
+
+        Args:
+            transactions(list): lists for all transactions, which trtansaction they are waiting on
+        """
         ignore = []
         i = 0
         while i < len(transactions):
@@ -72,7 +86,12 @@ class Generator:
         return True
 
     def evaluate_conclude(self, transaction: int) -> bool:
-        """Function to determine the conclusion status"""
+        """
+        Function to determine the conclusion status
+
+        Args:
+            transaction(int): transaction which should be evaluated
+        """
         if self.schedule.op_trans(transaction) == 0 or (
             len(self.schedule.active()) == 1 and self.index > 1
         ):  # if none performed, if not the last action, but only one operation remains
@@ -86,7 +105,9 @@ class Generator:
             return bool(random.choice(self.conclude_choice))
 
     def choose_transaction(self) -> int:
-        """Returns the transaction, either randomly ob forced bc no operation is performed yet and threshold is reached."""
+        """
+        Returns the transaction, either randomly ob forced bc no operation is performed yet and threshold is reached.
+        """
         trans = 0
         if self.index == len(self.schedule.active()):
             for u in self.schedule.active():
@@ -104,16 +125,33 @@ class GenerateSchedule(Generator):
     """Class which generates a schedule"""
 
     def __init__(self, transactions: list, resources: list[str]) -> Schedule:
+        """
+        Constructor
+
+        Args:
+            transactions(list): number of transactions
+            resources(list[str]): list of resources
+        """
         super().__init__(transactions, resources)
         self.generate_schedule()
 
     def generate_schedule(self) -> Schedule:
+        """
+        Function to generate a schedule
+        """
         while self.index > 0:
             trans = self.choose_transaction()
             self.generate_action(trans, self.evaluate_conclude(trans))
             self.index -= 1
 
     def generate_action(self, transaction: int, conclude: bool):
+        """
+        Function to generate a schedule action r/w/c/a
+
+        Args:
+            transaction(int): the transaction which performs the action
+            conclude(bool): wether to c/a the transaction
+        """
         if conclude:  # add an abort/commit
             if bool(random.choice([0, 1])):
                 self.schedule.aborts[transaction] = self.schedule.next_index()
@@ -131,11 +169,19 @@ class GenerateSchedule(Generator):
 
 
 class GenerateRecovery(Generator):
-    """Class which generates a Recovery schedule"""
+    """Class which generates a schedule in a recovery class"""
 
     def __init__(
         self, transactions: list, resources: list[str], recovery: str
     ) -> Schedule:
+        """
+        Constructor
+
+        Args:
+            transactions(list): number of transactions
+            resources(list[str]): list of resources
+            recovery(str): type of recovery class the schedule should be in
+        """
         super().__init__(transactions, resources)
         # recovery
         self.recovery = recovery
@@ -143,6 +189,9 @@ class GenerateRecovery(Generator):
         self.generate_schedule()
 
     def generate_schedule(self):
+        """
+        Function to generate a schedule in one recovery class
+        """
         while self.index > 0:
             trans = self.choose_transaction()
             self.generate_recovery_action(trans, self.evaluate_conclude(trans))
@@ -151,6 +200,14 @@ class GenerateRecovery(Generator):
             self.index -= 1
 
     def generate_recovery_action(self, transaction: int, conclude: bool):
+        """
+        Function to produce a action for a recovery schedule.
+        Might also fail and do nothing due to randomness.
+
+        Args:
+            transaction(int): transactions chosen (might change of no operation possible)
+            conclude(bool): indicates wether the transaction should be closed (can be denied by the function)
+        """
         prepared = self.any_read_from()
         if (
             len(self.schedule.active()) == 2
@@ -249,6 +306,9 @@ class GenerateRecovery(Generator):
         return
 
     def not_ready(self) -> bool:
+        """
+        Function which returns wether the computed schedule is not in the next bigger class.
+        """
         return (
             not self.not_next
             and (self.recovery == "a" or not self.any_read_from())
@@ -261,8 +321,14 @@ class GenerateRecovery(Generator):
             )
         )
 
-    def other_writes(self, trans, res) -> list:
-        """Returns last write transactions on res other than from trans"""
+    def other_writes(self, trans: int, res: str) -> list:
+        """
+        Function which returns last write transactions on res other than from transaction
+
+        Args:
+            trans(int): transaction to look at
+            res(str): resource to look at
+        """
         return [
             op
             for op in self.last_write()
@@ -270,8 +336,16 @@ class GenerateRecovery(Generator):
         ]
 
     def choose_op(
-        self, resource, operation, transaction
+        self, resource: str, operation: OperationType, transaction: int
     ) -> list[str, OperationType, int]:
+        """
+        Function which chooses an operation so the schedule is no longer in the next bigger class.
+
+        Args:
+            resource(str): resource to look at
+            operation(OperationType): Operation type to consider
+            transaction(int): transaction to look at
+        """
         if not self.other_writes(transaction, resource) or self.recovery == "n":
             if self.last_write():
                 if (
@@ -323,7 +397,12 @@ class GenerateRecovery(Generator):
         return l_cur_write
 
     def read_from(self, op1: Operation, op2: Operation) -> bool:
-        """Says wether op1 reads from op2, commits and aborts only till this operation"""
+        """Says wether op1 reads from op2, commits and aborts only till this operation
+
+        Args:
+            op1(Operation): possible read operation
+            op2(Operation): possible write operation
+        """
         if (
             op1.op_type == OperationType.READ
             and op2.op_type == OperationType.WRITE
@@ -350,7 +429,11 @@ class GenerateRecovery(Generator):
         return False
 
     def read_from_trans(self, current_transaction: int) -> list:
-        """Function returning transactions which read from current_transaction"""
+        """Function returning transactions which read from current_transaction
+
+        Args:
+            current_transaction(int): transaction to check
+        """
         reads = []
         open_operations = [
             op
@@ -369,7 +452,11 @@ class GenerateRecovery(Generator):
         return reads
 
     def trans_read_from(self, current_transaction: int) -> list:
-        """Function returning transactions which current_transaction reads from"""
+        """Function returning transactions which current_transaction reads from
+
+        Args:
+            current_transaction(int): transaction to check
+        """
         reads = []
         open_operations = [
             op
@@ -394,8 +481,13 @@ class GenerateRecovery(Generator):
                 return True
         return False
 
-    def check_circle_trans(self, current_transaction: int, write: int) -> bool:
-        """Returns True if a circle is produced when executing the current read transaction"""
+    def check_circle_trans(self, current_transaction: int, write: list) -> bool:
+        """Returns True if a circle is produced when executing the current read transaction
+
+        Args:
+            current_transaction(int): transaction to check (read transaction)
+            write(list): all write transaction
+        """
         check_circle_reads = []
         for i in range(1, self.schedule.tx_count + 1):
             if i == current_transaction:
@@ -406,10 +498,14 @@ class GenerateRecovery(Generator):
 
     def new_transaction(self, current_trans: int, recovery=None) -> int:
         """Returning usable transaction or 0
-        Gets:
-        - (optional) recovery: Bool, in recovery
+
+        Args:
+            current_trans(int): transaction to check
+            (optional) recovery(bool):  in recovery
+
         Returns:
-        - valid transaction or 0"""
+            valid transaction or 0
+        """
         transactions1 = [
             q
             for q in range(1, self.schedule.tx_count + 1)
@@ -433,6 +529,14 @@ class GenerateDeadlock(Generator):
     def __init__(
         self, transactions: list, resources: list[str], deadlock: bool
     ) -> Schedule:
+        """
+        Constructor
+
+        Args:
+            transactions(list): transactions
+            resources(list(str)):  resources to use
+            deadlock(bool): wether or not a deadlock should occur
+        """
         super().__init__(transactions, resources)
         # deadlock
         self.deadlock = deadlock
@@ -443,6 +547,9 @@ class GenerateDeadlock(Generator):
         self.generate_schedule()
 
     def generate_schedule(self):
+        """
+        Function to generate a schedule with considerations to deadlocks
+        """
         while self.index > 0:
             trans = self.choose_transaction()
             self.generate_deadlock_action(trans, self.evaluate_conclude(trans))
@@ -457,6 +564,13 @@ class GenerateDeadlock(Generator):
     def generate_deadlock_action(
         self, transaction: int, conclude: bool
     ) -> tuple[list, list]:
+        """
+        Function to generate an action for a schedule with(out) deadlocks
+
+        Args:
+            transaction(int): transaction to consider (might be changes by the function)
+            conclude(bool):  wether to conclude (might be overwritten by the function)
+        """
         self.performed_l = []
         if self.deadlock and not self.deadlock_occurred:
             if len(self.schedule.active()) == 2 or (
@@ -558,7 +672,14 @@ class GenerateDeadlock(Generator):
         return
 
     def different_action(self, transaction: int, no_waiting=False) -> list[Operation]:
-        """"""
+        """
+        Function
+
+        Args:
+            transactions(list): transactions
+            resources(list(str)):  resources to use
+            deadlock(bool): wether or not a deadlock should occur
+        """
         dif_act = [
             op for op in self.first_locks(False, []) if op.tx_number != transaction
         ]
@@ -573,13 +694,16 @@ class GenerateDeadlock(Generator):
             return dif_act
 
     def res_not_locked(self) -> list[int]:
-        """Returns resources which are not locked yet"""
+        """Returns resources which are not locked yet (no w/r performed on resource by active/waiting transaction)."""
         return [
             res for res in self.schedule.resources if res not in self.res_first_lock()
         ]
 
     def trans_no_lock(self) -> list[int]:
-        """Returns transactions which are not locked yet"""
+        """Returns transactions which are not locked yet
+        - transactions have to be active
+        - transactions have to be waiting on another transaction for some resource
+        """
         return [
             trans
             for trans in self.schedule.active()
@@ -587,8 +711,14 @@ class GenerateDeadlock(Generator):
         ]
 
     def trans_first_lock(self, active=False, waiting=False) -> list[int]:
-        """Function returns all transactions which hold a first lock and are active or (if acitve=False(default)) waiting
-        - if waiting: active transactions which are not waiting"""
+        """
+        Function returns all transactions which hold a first lock and are active or waiting
+
+        Args:
+            - active(Bool): optional, only consider active transactions
+            - waiting(Bool): optional, only interesting if active = True:
+                exclude waiting transactions
+        """
         trans_fl = list(set([op.tx_number for op in self.first_locks(False, [])]))
         if active:
             if waiting:
@@ -607,7 +737,7 @@ class GenerateDeadlock(Generator):
             ]
 
     def res_first_lock(self) -> list[int]:
-        """Function returns resources on which an active trans or the trans is waiting on someone holds a first lock"""
+        """Function returns resources on which an active transaction or the transaction is waiting on someone holds a first lock"""
         return list(
             set(
                 [
@@ -620,8 +750,12 @@ class GenerateDeadlock(Generator):
         )
 
     def all_trans_waiting_on(self, circle=False) -> list[int]:
-        """Function which returns all active transactions anyone waits on,
-        - if circle = True: list of lists of all trans who is waiting on who"""
+        """
+        Function which returns all active transactions anyone waits on
+
+        Args:
+            - circle(Bool): optional, return list[lists] instead of all transactions which are waiting on each other
+        """
         waiting = []
         for i in range(1, self.schedule.tx_count + 1):
             if not circle and i not in self.schedule.active():
@@ -632,7 +766,11 @@ class GenerateDeadlock(Generator):
         return list(set([trans for list in waiting for trans in list]))
 
     def waiting_on(self, trans: int) -> list[int]:
-        """Function which returns which transaction the current trans is waiting on"""
+        """Function which returns which transaction the current transaction is waiting on
+
+        Args:
+            - trans(int): transaction to check
+        """
         if self.freed(trans, False, []):
             return []
         waiting = self.perform_waiting(trans, [])
@@ -640,7 +778,13 @@ class GenerateDeadlock(Generator):
         return list(set(waiting + waiting_indirect))
 
     def indirect_waiting(self, transaction: int, ignore_trans=[]) -> list:
-        """Function to check which transactions are indirectly waiting on each other"""
+        """
+        Function to check which transactions are indirectly waiting on each other
+
+        Args:
+            - transaction(int): transaction to check (which other transactions it waits on)
+            - ignore_trans(list): optional, transactions to ignore from consideration
+        """
         waiting = []
         altered = False
         for i in [t for t in self.schedule.active() if t != transaction]:
@@ -664,7 +808,13 @@ class GenerateDeadlock(Generator):
         return waiting
 
     def perform_waiting(self, transaction: int, ignore=[]) -> list:
-        """Given the transaction and the locks returns transactions which it is waiting on"""
+        """
+        Given the transaction and the locks returns transactions which it is waiting on
+
+        Args:
+            - transaction(int): transaction to check which other transactions it works on
+            - ignore(list): optional, transaction which are assumed to be concluded in the schedule
+        """
         first_locks = self.first_locks(True, ignore)
         _, unperformed_op = self.performed(ignore)
         waiting = []
@@ -694,8 +844,13 @@ class GenerateDeadlock(Generator):
         return waiting
 
     def circle_deadlock(self, operation=None) -> bool:
-        """Returns True if the schedule contains a deadlock
-        - operation (optional): checks if operation performed deadlock occurs"""
+        """
+        Function to check wether the schedule contains a deadlock.
+        Returns True if the schedule contains a deadlock.
+
+        Args:
+            - operation(Bool): optional, adds the operation to the schedule, and then checks it
+        """
         if operation:
             self.schedule.operations.append(operation)
         waiting_lst = self.all_trans_waiting_on(True)
@@ -704,8 +859,14 @@ class GenerateDeadlock(Generator):
         return self.check_circle(waiting_lst)
 
     def first_locks(self, additional_write=False, add_conclude=[]) -> list:
-        """Returns the first locks on all resources, excluding already performed and freed transactions
-        If optional parameter, include first write locks if available"""
+        """
+        Returns the first locks on all resources, excluding already performed and freed transactions.
+        If optional parameter, include first write locks if available
+
+        Args:
+            - additional_write(Bool): optional, if the first lock is a rl, include the first wl if existing (r1(x) w1(x) include both)
+            - add_conclude(list): optional, assume for those transactions to be committed
+        """
         first_locks = []
         performed, waiting = self.performed(add_conclude)
         for i in self.schedule.operations:
@@ -736,7 +897,16 @@ class GenerateDeadlock(Generator):
         return first_locks
 
     def performed(self, add_conclude=[]):
-        """Returns all performed operations up to now and waiting ones"""
+        """
+        Computes which operations from the schedule are performed, and which are waiting
+
+        Args:
+            - add_conclude(list): optional, adds a commit to these schedules
+
+        Return:
+            - list: all performed operations
+            - list: all waiting operations
+        """
         for concl, per in self.performed_l:
             if concl == add_conclude:
                 return per
@@ -770,14 +940,30 @@ class GenerateDeadlock(Generator):
         ]
 
     def index_last_op(self, trans: int) -> int:
-        """Function to return the index of the last operation of a transaction, and ignores commits, aborts in the indexing"""
+        """
+        Function to return the index of the last operation of a transaction, and ignores commits, aborts in the indexing
+
+        Args:
+            - trans(int): Transaction to check
+        """
         for ind, i in enumerate(self.schedule.operations, 1):
             if i.tx_number == trans:
                 index = ind
         return max(0, index)
 
     def perform(self, actions: list, locks: list) -> list[list, list, list]:
-        """Function which performs a schedule and returns the executed operations, locks and waiting operations"""
+        """
+        Function which performs a schedule and returns the executed operations, locks and waiting operations
+
+        Args:
+            - actions(list): all operations to check (including a/c)
+            - locks(list): locks set on resources (needed bc it is an recursive function)
+
+        Return:
+            - List: all locks set
+            - List: all waiting operations
+            - List: all performed operations
+        """
         performed_op = []
         waiting = []
         for i in actions:
@@ -813,7 +999,14 @@ class GenerateDeadlock(Generator):
         return locks, waiting, performed_op
 
     def freed(self, trans: int, test_all_performed=False, ignore=[]) -> bool:
-        """Returns wether a transaction has finished and was able to perform all its operations"""
+        """
+        Returns wether a transaction has finished and was able to perform all its operations
+
+        Args:
+            - trans(int): transaction to check
+            - test_all_performed(bool): optional, to check if all operations of an still active transaction have been performed
+            - ignore(list): optional, other transactions which can be assumed c/a in this process (they dont hold the locks anymore)
+        """
         performed, _ = self.performed(ignore)
         if trans in self.schedule.active() and not test_all_performed:
             return False

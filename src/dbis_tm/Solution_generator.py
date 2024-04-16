@@ -6,7 +6,6 @@ from dbis_tm import (
     ConflictGraphNode,
 )
 from typing import Union
-from graphviz import Digraph
 import copy
 
 
@@ -572,7 +571,7 @@ def predict_deadlock(schedule: Union[Schedule, str]) -> bool:
 
 class Perform_conflictgraph:
     @classmethod
-    def compute_conflict_quantity(cls, schedule: Union[Schedule, str]) -> list:
+    def compute_conflict_quantity(cls, schedule: Union[Schedule, str]) -> set:
         """
         Method to perform the omputing of the conflict set.
         No check for the corectnes of the schedule included. Please check this before using.
@@ -617,21 +616,21 @@ class Perform_conflictgraph:
         conflict_list = []
         [conflict_list.append(x) for x in conflict_list_dup if x not in conflict_list]
         # compute string
-        conflict = []
+        conflict = set()
         for [k, l] in conflict_list:
             str1 = k.op_type.value + str(k.tx_number) + "(" + k.resource + ")"
             str2 = l.op_type.value + str(l.tx_number) + "(" + l.resource + ")"
             conflict_tuple = (str1, str2)
-            conflict.append(conflict_tuple)
-            # [("w_3(y)", "w_1(y)"), ("w_1(y)", "r_3(y)"), ("w_1(z)", "w_3(z)"), ("w_1(x)", "r_3(x)")]
+            conflict.add(conflict_tuple)
+            # {("w_3(y)", "w_1(y)"), ("w_1(y)", "r_3(y)"), ("w_1(z)", "w_3(z)"), ("w_1(x)", "r_3(x)")}
         return conflict
 
     @classmethod
-    def compute_conflictgraph(cls, conflict_list: dict) -> ConflictGraph:
+    def compute_conflictgraph(cls, conflict_list: dict, name="") -> ConflictGraph:
         knots = []
         for i in range(1, len(conflict_list) + 1):
             knots.append(ConflictGraphNode(i))
-        graph = ConflictGraph()
+        graph = ConflictGraph(name)
         print("test:", conflict_list)
         for i in conflict_list.keys():
             if conflict_list[i] != set():

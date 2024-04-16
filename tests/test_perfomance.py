@@ -1,6 +1,6 @@
 from dbis_tm import Schedule, OperationType, Operation
 from dbis_tm.TMSolver import Scheduling
-from dbis_tm.Solution_generator import Perform_scheduling, Perform_conflictgraph
+from src.dbis_tm.Solution_generator import Perform_scheduling, Perform_conflictgraph
 from unittest import TestCase
 
 
@@ -145,15 +145,15 @@ class TestPerformer(TestCase):
         conflict_schedules = [
             (
                 "w1(x)r2(y)r1(x)r2(x)c1w2(x)c2",
-                [("w1(x)", "r2(x)"), ("w1(x)", "w2(x)"), ("r1(x)", "w2(x)")],
+                {("w1(x)", "r2(x)"), ("w1(x)", "w2(x)"), ("r1(x)", "w2(x)")},
             ),
-            ("w1(x)r2(y)r1(x)r2(x)c1w2(x)a2", []),
-            ("w1(x)r2(y)r1(x)r2(x)a1w2(x)c2", []),
-            ("w1(x)r2(y)r1(x)r2(x)a1w2(x)a2", []),
-            ("w1(a) w3(c) r2(a) a2 r1(c) r3(a) a1 a3", []),
+            ("w1(x)r2(y)r1(x)r2(x)c1w2(x)a2", set()),
+            ("w1(x)r2(y)r1(x)r2(x)a1w2(x)c2", set()),
+            ("w1(x)r2(y)r1(x)r2(x)a1w2(x)a2", set()),
+            ("w1(a) w3(c) r2(a) a2 r1(c) r3(a) a1 a3", set()),
             (
                 "w1(a) w3(c) r2(a) c2 r1(c) r3(a) c1 c3",
-                [("w1(a)", "r2(a)"), ("w1(a)", "r3(a)"), ("w3(c)", "r1(c)")],
+                {("w1(a)", "r2(a)"), ("w1(a)", "r3(a)"), ("w3(c)", "r1(c)")},
             ),
         ]
         for schedule, cset in conflict_schedules:

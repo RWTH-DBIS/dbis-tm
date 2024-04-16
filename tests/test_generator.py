@@ -1,7 +1,7 @@
 from dbis_tm import Schedule
 from dbis_tm.TMSolver import Recovery
 from dbis_tm.Generate import generate
-from dbis_tm.Solution_generator import predict_deadlock
+from src.dbis_tm.Solution_generator import predict_deadlock
 from unittest import TestCase
 import random
 

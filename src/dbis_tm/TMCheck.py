@@ -8,8 +8,8 @@ Created on 2022-07-06
 """
 import re
 from dbis_tm import Schedule
-from dbis_tm.TMSolver import Scheduling, Recovery, Serializability
-from dbis_tm.Solution_generator import Perform_conflictgraph
+from src.dbis_tm.TMSolver import Scheduling, Recovery, Serializability
+from src.dbis_tm.Solution_generator import Perform_conflictgraph
 from typing import Union
 from excmanager.scorer import Scorer, SetScorer
 
@@ -27,7 +27,7 @@ class ScheduleCheck:
         msg = None
         s_parsed, s_problem = Schedule.parse_schedule(schedule)
         result_parsed, result_problem = Schedule.parse_schedule(result)
-        problems = Scheduling.check_operations_same(s_parsed, result_parsed)
+        problems = Schedule.check_operations_same(s_parsed, result_parsed)
         if not len(problems) == 0:
             msg = f"schedule_{index} enthält unterschiedliche oder nicht alle Operationen aus s{index}"
         return msg
@@ -59,20 +59,21 @@ class ScheduleCheck:
         problems = Schedule.is_operations_same(original, schedule)
         if not problems:
             self.feedback(
-                f"schedule has not the same operations as the original.", False
+                f"Der schedule hat nicht die selben Operationen wie der originale Schedule",
+                False,
             )
             sameProblemCount += 1
         else:
-            self.feedback("schedule covers all operations", True)
+            self.feedback("Schedule behinhaltet alle Operationen.", True)
 
         s_parsed, error_parse = Schedule.parse_schedule(schedule_str)
         if error_parse:
             ScheduleCheck.feedback(
-                f"Could not parse schedule due to '{error_parse}'", False
+                f"Das parsen war nicht möglich wegen '{error_parse}'", False
             )
             sameProblemCount += 1
         else:
-            ScheduleCheck.feedback("parse schedule ok", True)
+            ScheduleCheck.feedback("Parsing des Schedules war erfolgreich.", True)
         return sameProblemCount == 0
 
 
@@ -110,7 +111,7 @@ class SyntaxCheck:
         return msg
 
     @classmethod
-    def check_conf_set_syntax(cls, conf_set: list[tuple[str, str]]) -> str:
+    def check_conf_set_syntax(cls, conf_set: set[tuple[str, str]]) -> str:
         """
         Check syntax of strings in tuple that denotes conflicting operations.
 
@@ -119,8 +120,10 @@ class SyntaxCheck:
             or an error message in case a tuple is formatted incorrectly
         """
         tuple_pattern = "[rw][1-3][(][a-z][)]|[rw]_[1-3][(][a-z][)]"
-        if not isinstance(conf_set, list):
-            return f"{conf_set} ist keine Liste"
+        if conf_set == {}:
+            pass
+        elif not isinstance(conf_set, set):
+            return f"{conf_set} ist kein Set"
         for t in conf_set:
             if not len(t) == 2:
                 return f"Das Tupel {t} von {conf_set} ist kein Paar"
@@ -180,7 +183,7 @@ class ScheduleScorer(Scorer):
         schedule_p, schedule_error = Schedule.parse_schedule(schedule)
         checkSame = ScheduleCheck.check_same(original_p, schedule_p, schedule)
         if checkSame:
-            check = f"checking '{check_scheduling}' of schedule '{schedule}'"
+            check = f"Prüfe '{check_scheduling}' von Schedule '{schedule}'"
             errors = self.check_schedule(schedule_p, check_scheduling)
             if errors:
                 for error in errors:
@@ -196,7 +199,7 @@ class ConflictSetScorer:
     scorer for conflict sets
     """
 
-    def removeBlanks(self, result):
+    def removeBlanksandUnderscores(self, result):
         """
         remove blanks and underscores
         """
@@ -208,17 +211,30 @@ class ConflictSetScorer:
         }
         return resultNoBlanks
 
-    def score_conflictSet(self, result1, result2, schedule1, schedule2, max_points):
+    def score_conflictSet(
+        self,
+        result1,
+        result2,
+        schedule1: Union[Schedule, set],
+        schedule2: Union[Schedule, set],
+        max_points,
+    ):
         """
         score the given result sets against the given solutions
         """
-        result1 = self.removeBlanks(result1)
-        solution1 = Perform_conflictgraph.compute_conflict_quantity(schedule1)
+        result1 = self.removeBlanksandUnderscores(result1)
+        result2 = self.removeBlanksandUnderscores(result2)
+        if type(schedule1) == set:
+            solution1 = self.removeBlanksandUnderscores(schedule1)
+        else:
+            solution1 = Perform_conflictgraph.compute_conflict_quantity(schedule1)
+        if type(schedule1) == set:
+            solution2 = self.removeBlanksandUnderscores(schedule2)
+        else:
+            solution2 = Perform_conflictgraph.compute_conflict_quantity(schedule2)
         setScorer1 = SetScorer()
-        setScorer1.evaluate_set(result1, solution1, max_points=max_points / 2)
-        result2 = self.removeBlanks(result2)
-        solution2 = Perform_conflictgraph.compute_conflict_quantity(schedule2)
         setScorer2 = SetScorer()
+        setScorer1.evaluate_set(result1, solution1, max_points=max_points / 2)
         setScorer2.evaluate_set(result2, solution2, max_points=max_points / 2)
         score = setScorer1.score + setScorer2.score
         return round(score, 2)
@@ -241,18 +257,20 @@ class ConflictSerializationScorer(Scorer):
             points_seri = max_points / 2
             points_graph = max_points / 2
         serializable = Serializability.is_serializable(schedule)
-        cgsolution = Perform_conflictgraph.compute_conflictgraph(serializable[1])
+        cgsolution = Perform_conflictgraph.compute_conflictgraph(serializable[1], name)
 
-        serializableCheck = f"check that your result for serializable of {name} {serializableResult} = correct solution serializable {serializable[0]}"
+        serializableCheck = f"Prüfe das Ihre Lösung für die Serialisierung von {name} {serializableResult} = Korrekte Lösung der Serialisierung {serializable[0]}"
         serializableProblem = None
         if serializableResult != serializable[0]:
             serializableProblem = ""
         self.addScore(points_seri, serializableCheck, serializableProblem)
         expectedGraph = str(cgsolution.digraph)
-        conflictGraphCheck = f"check that conflictGraph is '''{expectedGraph}'''"
+        conflictGraphCheck = (
+            f"Prüfe ob der Konfliktgraph folgender ist'''{expectedGraph}'''"
+        )
         conflictGraphProblem = None
         if cgresult != cgsolution:
-            conflictGraphProblem = f"{str(cgresult.digraph)} is different"
+            conflictGraphProblem = f"{str(cgresult.digraph)} ist unterschiedlich"
         self.addScore(points_graph, conflictGraphCheck, conflictGraphProblem)
         return self.score
 
@@ -309,25 +327,14 @@ class RecoveryScorer(Scorer):
         proofClass = self.removeBlanksAndUnderScores(proofClass)
         # positive Proof
         if isClassSolution:
-            check = f"{name} is {proofName} with expected proof {proofClassSolution}"
-            # check sets:
-            errors1 = []
-            errors2 = []
-            for i in proofClassSolution:
-                if i not in proofClass:
-                    errors1.append(i)
-            for j in proofClass:
-                if j not in proofClassSolution:
-                    errors2.append(j)
-            if isClassSolution == isClass and len(errors1) == 0 == len(errors2):
+            check = f"{name} ist {proofName} mit erwartetem Beweis {proofClassSolution}"
+            if isClassSolution == isClass and proofClass == proofClassSolution:
                 pass
             else:
-                problem = f"Missing tuples: {errors1},wrong tuples: {errors2}"
+                problem = f"{proofClass}"
             self.addScore(self.points_per_class, check, problem)
         else:
-            check = (
-                f"{name} is not {proofName} with expected proof {proofClassSolution}"
-            )
+            check = f"{name} ist nicht {proofName} mit erwartetem Beweis {proofClassSolution}"
             if isClassSolution == isClass:
                 # get first element of set
                 if len(proofClassSolution) == 0 and len(proofClass) == 0:
@@ -340,7 +347,7 @@ class RecoveryScorer(Scorer):
                         )
             if not negativeProof:
                 problem = (
-                    f"your proof {self.setString(proofClass)} is not the expected one"
+                    f"Ihr Beweis {self.setString(proofClass)} ist nicht der erwartete"
                 )
             self.addScore(self.points_per_class, check, problem)
         return negativeProof

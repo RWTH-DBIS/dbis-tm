@@ -1,13 +1,8 @@
 from Generate import generate
-from dbis_tm.Solution_generator import (
-    Perform_conflictgraph,
-    Perform_scheduling,
-    predict_deadlock,
-)
+from src.dbis_tm.Solution_generator import Perform_conflictgraph, Perform_scheduling
 from dbis_tm import Schedule
 from dbis_tm.TMSolver import Serializability, Recovery
 import random
-from IPython.display import display
 
 
 class Generate_Tasks:
