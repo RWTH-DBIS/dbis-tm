@@ -1,6 +1,6 @@
 [project]
 name="dbis-tm"
-version='1.0.0'
+version='1.0.1'
 description="RWTH Aachen Computer Science i5/dbis assets for Lecture Datenbanken und Informationssysteme"
 
 authors = [
@@ -15,7 +15,7 @@ classifiers = [
 
 dependencies = [
 	"graphviz~=0.20.1",
-	"dbis-exc-manager~=0.3"
+	"dbis-exc-manager~=1.0"
 ]
 
 [project.optional-dependencies]
