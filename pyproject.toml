@@ -1,6 +1,6 @@
 [project]
 name="dbis-tm"
-version='1.0.1'
+version='2.0.0'
 description="RWTH Aachen Computer Science i5/dbis assets for Lecture Datenbanken und Informationssysteme"
 
 authors = [
