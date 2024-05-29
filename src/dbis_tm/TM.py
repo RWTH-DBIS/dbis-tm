@@ -8,7 +8,7 @@ Created 2022-05
 from __future__ import annotations
 
 import itertools
-import sys
+import sys, re
 from enum import Enum, EnumMeta
 from typing import Union
 from graphviz import Digraph
@@ -424,3 +424,72 @@ class ConflictGraphNode:
 
     def __hash__(self):
         return hash(self.tx_number)
+
+
+class SyntaxCheck:
+    """
+    I am an interface for checking the syntax of inputs.
+    You should not construct me because I am a stateless interface that merely provides static functions.
+
+    Functions:
+        check_conf_set_syntax (checks syntax of strings in tuple that denotes conflicting operations)
+    """
+
+    def __init__(self):
+        raise TypeError("Cannot create 'SyntaxCheck' instances.")
+
+    @classmethod
+    def check_schedule_syntax(cls, schedule: str) -> str:
+        """
+        check the syntax of the given schedule
+
+        Args:
+            schedule(str): the schedule to check
+
+        Returns:
+            msg: None if ok else the problem message
+        """
+        schedule = Schedule.sanitize(schedule)
+        syntax_pattern = "([rw][lu]?[1-3][(][a-z][)]|[c][1-3])?"
+        p_count = re.findall(syntax_pattern, schedule).count("")
+        msg = None
+        if schedule == "":
+            msg = "Leerer Schedule kann keine Lösung sein"
+        if p_count > 1:
+            msg = f"Schedule '{schedule}' hat keine korrekte Syntax"
+        return msg
+
+    @classmethod
+    def check_conf_set_syntax(cls, conf_set: set[tuple[str, str]]) -> str:
+        """
+        Check syntax of strings in tuple that denotes conflicting operations.
+
+        Returns:
+            None if input is formatted according to pattern
+            or an error message in case a tuple is formatted incorrectly
+        """
+        tuple_pattern = "[rw][1-3][(][a-z][)]|[rw]_[1-3][(][a-z][)]"
+        if conf_set == {}:
+            pass
+        elif not isinstance(conf_set, set):
+            return f"{conf_set} ist kein Set"
+        for t in conf_set:
+            if not len(t) == 2:
+                return f"Das Tupel {t} von {conf_set} ist kein Paar"
+            for s in sorted(list(t)):
+                if not re.match(tuple_pattern, s):
+                    return f"Das Tupel {t} von {conf_set} hat keine korrekte Syntax"
+        return None
+
+    @classmethod
+    def check(cls, index, schedule, result) -> str:
+        """
+        check the given schedule against the given result
+        """
+        msg = None
+        s_parsed, s_problem = Schedule.parse_schedule(schedule)
+        result_parsed, result_problem = Schedule.parse_schedule(result)
+        problems = Schedule.check_operations_same(s_parsed, result_parsed)
+        if not len(problems) == 0:
+            msg = f"schedule_{index} enthält unterschiedliche oder nicht alle Operationen aus s{index}"
+        return msg
