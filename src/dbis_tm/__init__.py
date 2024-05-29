@@ -5,4 +5,5 @@ from dbis_tm.TM import (
     Operation,
     ConflictGraph,
     ConflictGraphNode,
+    SyntaxCheck,
 )
