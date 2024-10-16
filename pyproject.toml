@@ -23,7 +23,7 @@ test = [
     "black==23.12.1"
 ]
 build = [
-    "twine==4.*",
+    "twine==5.*",
     "build==1.*"
 ]
 
