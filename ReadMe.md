@@ -1,160 +1,242 @@
-# Erklärung TM Paket
-
-# Nachtrag HTWR Scheduler Recovery Lösen
-``w2(b) w3(b) c3 a2 ``\
-Wird falsch ausgewertet (False, False, False), sollte aber (True, True, False) sein.
-Das Problem scheint in RC zu liegen da es für ``w2(b) w3(b) r2(b) c3 a2 `` immer noch besteht.
+# Dokumentation TM-Paket
 
 # Table of Contents
-1.[Generell](#generell)\
-2.[Generator](#1Generator)\
-3.[Konfliktmengen](#2konfliktmengen)\
-4.[Recovery](3#recovery)\
-5.[Scheduling](#4scheduling)
+[TM](#tm)
+- [Class: OperationTypeMeta](#class-operationtypemetaenummeta)
+- [Class: OperationType](#class-operationtypeenum-metaclassoperationtypemeta)
+- [Class: Operation](#class-operation)
+- [Class: Schedule](#class-schedule)
+- [Class: ConflictGraph](#class-conflictgraph)
+- [Class: ConflictGraphNode](#class-conflictgraphnode)
+- [Class: SyntaxCheck](#class-syntaxcheck)
 
-# Generell
-Diese Datei soll einen Überblick über alle Methoden im Transaktionsmanagement geben. Hier sind sowohl alte als auch neue Methoden hinterlegt und kurz zusammengefasst.
+## TM
+Here is the documentation of all classes and methods of _TM_.
 
-Zu den folgenden Kategorien verfügt das TM Paket auch über 2 Parsing Funktionen:
-- ``parse_schedule (schedule_str: str) -> tuple[Schedule, str]``
-    - Diese Funktion parsed einen String zu einem Schedule. Gibt gegebenenfalls einen Error-String zurück.
-- ``parse_string (cls, schedule: Schedule) -> tuple[str, str]``
-    - Diese Funktion parsed ein Schedule zu einem String. Gibt gegebenenfalls einen Error-String zurück.
+### Class: OperationTypeMeta(EnumMeta)
+Meta class for Operation type.
 
-# Aufgabenerstellung
-## Übungsblätter
-Es existiert eine Datei: _Generate_Tasks.py_ welche eine Infrastruktur bereitstellt um Aufgaben für die Übungsblätter zu erstellen. Es lohnt sich diese Aufgaben an einem Ort abzuspeichern, da die Erzeugung jedes Mal neu passiert und somit keine Aufgabe genauso nochmal erzeugt werden kann.
+`__contains__(self, item)`
+- Check that the item is contained in my member values.
 
-**Bitte auch auf Textänderungen achten die eventuell entstehen müssen.**\
-In diesem Datensatz sind auch die Lösungen enthalten, für die Erstellung einer Muserlösung.
+### Class: OperationType(Enum, metaclass=OperationTypeMeta)
+The kind / type of operation for an 'Operation'.\
+Possible operations:
+- 'READ' as 'r'
+- 'READ_LOCK' as 'rl'
+- 'READ_UNLOCK' as 'ru'
+- 'WRITE' as 'w'
+- 'WRITE_LOCK' as 'wl'
+- 'WRITE_UNLOCK' as 'wu'
 
-``get_tasks()`` gibt eine Liste von Listen zurück. \
-In der **ersten** Liste sind die Aufgaben zur **Serialisierbarkeit**. Die Liste ist folgendermaßen aufgebaut:
+### Class: Operation
+Part of a Schedule. Contains methods to compare operations.
 
-    [[Aufgabe-a, Lösung-a], [Aufgabe-b, Lösung-b]]
-- _Aufgabe-a_: [schedule1: String, schedule2: String]
-- _Lösung-a_: [conflictset1: List, conflictset2: List]
-- _Aufgabe-b_: [schedule3: String, conflictset3: List, schedule4: String, conflictset4: List]
-- _Lösung-b_: [serilizability3: bool, graph3: ConflictGraph, serilizability4: bool, graph4: ConflictGraph]\
+`__init__(self, op_type: OperationType, tx_number: int, resource: str, index: int)`
+- Creates an operation.
+- **Takes**
+    - _op_type_ [OperationType]: defines the type of the operation read/write/-(un)lock
+    - *tx_number* [int]: number of the transaction the operation belongs to
+    - *resource* [str]: name of the resource the operation is working on
+    - *index* [int]: index of the operation in the schedule
 
-In der **zweiten** Liste sind die Aufgaben und Lösungen zu **Recovery**:
+`__repr__(self)`
+- Returns a string of the operation.
+- **Returns**
+    - *str*: the operation written out (w1(x))
 
-    [[Aufgabe-a, Lösung-a], [Aufgabe-b, Lösung-b],[Aufgabe-c, Lösung-c]]
-- _Aufgabe-a_: [Klasse: char, schedule1: String]
-- _Lösung-a_: [[in_rc: Bool, in_aca: Bool, in_s: Bool],[proof_rc: List, proof_aca: List, proof_s: List]]
-- _Aufgabe-b_: [Klasse: char, schedule1: String]
-- _Lösung-b_: [[in_rc: Bool, in_aca: Bool, in_s: Bool],[proof_rc: List, proof_aca: List, proof_s: List]]
-- _Aufgabe-c_: [Klasse: char, schedule1: String]
-- _Lösung-c_: [[in_rc: Bool, in_aca: Bool, in_s: Bool],[proof_rc: List, proof_aca: List, proof_s: List]]\
-In der **dritten** Liste sind die Aufgaben und Lösungen zum **Scheduling**:
+`__eq__(self, obj)`
+- Checks wether two operations are similar in aspect of operation type, transaction and resource.
+- **Takes**
+    - *obj* [Operation]: the operation to check against
+- **Returns**
+    - *bool*: Wether both operations are the same
 
-        [[Aufgabe-a, Lösung-a], [Aufgabe-b, Lösung-b],[Aufgabe-c, Lösung-c]]
-- _Aufgabe-a_: [schedule1: String, klasse: char]
-- _Lösung-a_: [performed-schedule: schedule]
-- _Aufgabe-b_: [schedule1: String, klasse: char]
-- _Lösung-b_: [performed-schedule: schedule]
-- _Aufgabe-c_: [schedule1: String, klasse: char]
-- _Lösung-c_: [performed-schedule: schedule]
+`__sr__(self, obj)`
+- Checks wether two operations have the same transaction and resource.
+- **Takes**
+    - *obj* [Operation]: the operation to check against
+- **Returns**
+    - *bool*: Wether both operations are the same
 
-# 1.Generator
-**Neu**
-Der Generator kann drei unterschiedliche Arten von Schedules erzeugen:
-1. Zufällige Schedules
-2. Schedules mit Deadlockangabe
-3. Schedules in den verschiedenen Recoveryklassen
-
-Die Generator Funktion liegt in der Datei _Generate.py_ und heißt _generate\_schedule_. Sie ist wie folgt aufgebaut:
-
-## Die Funktion
-`generate (transactions: int, resources: list[str], deadlock (optional): bool, recovery (optional): str)-> tuple[Schedule, str]`
-
-**- Es ist nicht möglich eine Angabe zu deadlcok und recovery zu machen!**\
-**- Für Recovery werden mindestens 2 Transaktionen benötigt.**\
-**- Für Deadlock werden mindestens 2 Transaktionen und 2 Resourcen benötigt!**\
-In diesen Fällen wird ein Fehler ausgegeben.
-
-- _transactions_: Anzahl an zu erzeugenden Transaktionen [t_1,...]. Die Transaktionen sind immer von 1 bis m durchnummeriert.   
-    - Beispiel Eingabe: 3 
-- _resources_: Name der Ressourcen. Erwartet eine Liste an chars.        
-    - Beispiel Eingabe: ['a','b','c']
-- _deadlock_: Optional. Erwartet einen Bool. Erzeugt dann ein Schedule mit/ohne Deadlock. Ohne Deadlock funktioniert nicht immer. In dem Fall das es nicht funktioniert wird ein entsprechender String zurückgegeben.
-- _recovery_: Optional. Erwartet einen Char: 'r','a','s'. 
-    - 'r': Erzeugt einen Schedule in der Klasse Recovery.
-    - 'a': Erzeugt einen Schedule der in der Klasse Avoids Cascading Aborts ist.
-    - 's': Erzeugt einen Schedule der in der Klasse Strict ist.
-
-Zurückgegeben wird der Schedule.
-
-## Beispielanfragen:
-- Erzeugen eines zufälligen Schedules mit 3 Transaktionen und den Ressourcen 'a', 'b', 'c':
-    - generate(3, ['a','b','c'])
-- Erzeugen eines Schedules mit Deadlock:
-    - generate(3, ['a','b','c'], deadlock = True)
-- Erzeugen eines Schedules ohne Deadlock: **Fuktioniert nicht immer**
-    - generate(3, ['a','b','c'], deadlock = False)
-- Erzeugen eines Schedules in der Klasse 'Recovery' aber nicht in Avoids cascading aborts und Strict:
-    - generate(3, ['a','b','c'], recovery = 'r')
-- Erzeugen eines Schedules in der Klasse Avoids cascading aborts aber nicht in Strict:
-    - generate(3, ['a','b','c'], recovery = 'a')
-- Erzeugen eines Schedules in der Klasse Strict:
-    - generate(3, ['a','b','c'], recovery = 's')
-
-# 2.Konfliktmengen
-Die Funktionen liegen in den Dateien _TM.py_ und _Solution\_generator.py_.
-
-## TM.py
-In der Datei _TM.py_ liegen die Funktionen in der Klasse _Serializability_. Hier gibt es folgende Funktionen:
-- `` is_serializable (schedule[Schedule,str])-> tuple[bool, dict]``
-    - Prüft ob der Schedule serialisierbar ist.
-- ``build_graphviz_object (graph: dict)-> Digraph``
-    - Erzeugt den Konfliktgraph
-    - Für genauere Informationen zu Graphenerzeugung in Doku-Transaktionsmanagement gucken.
-
-**Neu:**
-## Solution_generator.py
-In der Datei _Solution\_generator.py_ sind die Funktionen in der Klasse _Perform\_conflictgraph_. Dort gibt es folgende Funktionen:
-- `` compute_conflict_quantity (cls, schedule: Schedule) -> list``
-    - Erzeugt aus einem gegebenen Schedule eine Konfliktgraphen. Dieser wird nur als Liste zurückgegeben, angelehnt an der Schreibweise in Doku-Transaktionsmanagement.
-- ``compute_conflictgraph(cls,conflict_list: dict) -> ConflictGraph``
-    - Erzeugt den Graph zu einem gegebenem dict ( is_serializable(schedule)[1]). Der Graph kann angezeigt werden mit: graph.get_graphviz_graph().
+`__same__(self, obj)`
+- Checks wether two operations are the same (also by index, trans, res, op_type).
+- **Takes**
+    - *obj* [Operation]: the operation to check against
+- **Returns**
+    - *bool*: Wether both operations are the same
 
 
-# 3. Recovery
-Die Funktionen können prüfen ob ein Schedule in der gegebenen Klasse ist.
+### Class: Schedule
+Class which is used to construct a schedule.
 
-## TM.py
-Die Funktionen liegen in der Datei _TM.py_ in der Klasse _Recovery_. Folgende Funktionen sind dort zu finden:
-- ``is_recoverable (schedule: Union[Schedule, str]) -> tuple[bool, set[tuple[int, str, int, bool]]]``
-    - Prüft ob ein gegebener Schedule in der Klasse 'Recovery' ist. Nimmt sowohl ein Schedule als auch den String eines Schedules. Gibt einen Bool zurück und entweder einen Beweis oder ein Gegebneispiel.
-- ``avoids_cascading_aborts (schedule: Union[Schedule, str]) -> tuple[bool, set[tuple[int, str, int, bool]]]``
-    - Prüft ob ein gegebener Schedule in der Klasse 'Avoids Cascading Aborts' ist. Nimmt sowohl ein Schedule als auch den String eines Schedules. Gibt einen Bool zurück und entweder einen Beweis oder ein Gegebneispiel.
-- ``is_strict (schedule: Union[Schedule, str]) -> tuple[bool, set[tuple[str, str, bool, bool]]]``
-    - Prüft ob ein gegebener Schedule in der Klasse 'Strict' ist. Nimmt sowohl ein Schedule als auch den String eines Schedules. Gibt einen Bool zurück und entweder einen Beweis oder ein Gegenbeispiel.
+`__init__(self, operations: list[Operation], resources: set[str], tx_count: int, aborts: dict, commits: dict)`
+- Initializes a schedule.
+- **Takes**
+    - *operations* [list(Operation)]: the list of all the operations the schedule contains
+    - *resources* [set(str)]: set with all the names of all resources
+    - *tx_count* [int]: number of transactions contained in the schedule
+    - *aborts* [dict]: dictionary of all aborts (entries contain transaction number and index of abort)
+    - *commits* [dict]: dictionary of all commits (entries contain transaction number and index of commits)
 
-# 4.Scheduling
-Diese Funktionen können prüfen ob ein Schedule in den jeweiligen Klassen ist, sowie die jeweiligen Schedules ausführen und prüfen ob ein Deadlock vorliegt.
+`__repr__(self)`
+- Returns a string of the schedule.
+- **Returns**
+    - *str*: the operation written out ('w1(x)c1')
 
-## TM.py
-Die Funktionen in der Datei _TM.py_ sind in der Klasse _Scheduling_:
-- ``is_2PL (schedule: Union[Schedule, str]) -> tuple[bool, list[str]]``
-    - Prüft ob der Schedule in 2PL Form ist. Gibt einen Bool zurück un gegebenenfalls die Fehler.
-- ``is_C2PL (schedule: Union[Schedule, str]) -> tuple[bool, list[str]]``
-    - Prüft ob der Schedule in C2PL Form ist. Gibt einen Bool zurück un gegebenenfalls die Fehler.
-- ``is_S2PL (schedule: Union[Schedule, str]) -> tuple[bool, list[str]]``
-    - Prüft ob der Schedule in S2PL Form ist. Gibt einen Bool zurück un gegebenenfalls die Fehler.
-- ``is_SS2PL (schedule: Union[Schedule, str]) -> tuple[bool, list[str]]``
-    - Prüft ob der Schedule in SS2PL Form ist. Gibt einen Bool zurück un gegebenenfalls die Fehler.
--  ``is_operations_same(schedule: Union[Schedule, str], mod_schedule: Union[Schedule, str]) -> bool``
-    - Prüft ob zwei gegebene Schedules die selben Operationen besitzen.
+``active(self) -> list[int]``
+- Helper function.
+- Returns all active transactions of a schedule (no abort/commit for the transaction in the schedule)
+- **Returns** 
+    - *list(int)*: the still active transactions
 
-**Neu** 
-## Solution_generator.py
-Die Funktionen in der Datei _Solution\_generator.py_ sind in der Klasse _Perform_scheduling_. Dort sind forgende Funktionen:
-- ``perform_S2PL (schedule: Schedule)-> tuple[Schedule, str]``
-    - Führt für den gegebenen Schedule ein S2PL aus. Gibt den Schedule nach dem Ausführen des lockings aus und gegebenenfalls einen String falls ein Deadlock vorliegt. Das Ausführen des S2PL ist auch nicht möglich, wenn ein Deadlock vorliegt.
-- ``perform_SS2PL (schedule: Schedule)-> tuple[Schedule, str]``
-    - Führt für den gegebenen Schedule ein SS2PL aus. Gibt den Schedule nach dem Ausführen des lockings aus und gegebenenfalls einen String falls ein Deadlock vorliegt. Das Ausführen des SS2PL ist auch nicht möglich, wenn ein Deadlock vorliegt.
-- ``perform_C2PL (schedule: Schedule)-> Schedule``
-    - Führt für den gegebenen Schedule ein C2PL aus. Gibt den Schedule nach dem Ausführen des lockings aus.
-- ``predict_deadlock (schedule: Schedule)-> bool``:
-    - Prüft ob ein gegebener Schedule einen Deadlock enthält. Dies passiert durch den Versuch ein SS2PL vorzunehmen.
+``next_index(self)``
+- Helper function.
+- Returns the next index in the schedule which is not yet occupied.
+- **Returns** 
+    - *int*: the next index
+
+``op_trans(self, transaction: int) -> int``
+- Checks how many operations the transaction performed.
+- **Takes**
+    - *transaction* [int]: the transaction to check
+- **Returns**
+    - *int*: How many operation the schedule contains from the given transaction
+
+`sanitize(cls, schedule: str) -> str`
+- Removes underscores, spaces, line breaks and newlines from schedule.
+- **Takes**
+    - *schedule* [str]: the schedule to sanitize
+- **Returns**
+    - *str*: returns the schedule without [" ", "_", "\t", "\n"]
+
+`parse_schedule(cls, schedule_str: str) -> tuple[Schedule, str]`
+- Parses a given string to a schedule.
+- **Takes**
+    - *schedule_str*: the schedule to parse
+- **Returns**
+    - *Schedule*: the parsed schedule
+    - *str*:    
+        - empty if everything works
+        - unparsable part in case of an error
+
+``parse_string(cls, schedule: Schedule) -> tuple[str, str]``
+- Parses a given schedule to a string.
+- **Problems**
+    - Only works if each transaction is concluded (commits/aborts).
+- **Takes**
+    - *schedule* [Schedule]: the schedule to parse
+- **Returns**
+    - *str*: the parsed schedule str
+    - *str*: 
+        - empty if no error occurs
+        - otherwise: the error message
+
+`is_operations_same(cls, schedule: Union[Schedule, str], mod_schedule: Union[Schedule, str]) -> bool`
+- Checks whether the two given schedules do have the same operations. 
+- **Problems**
+    - Ignores locking/ unlocking operations.
+- **Takes**
+    - *schedule* [Schedule, str]: the schedule to check against
+    - *mod_schedule* [Schedule, str]: the schedule to check
+- **Returns**
+    - *bool*: wether both schedules contain the same operations
+
+`check_operations_same(cls, schedule: Union[Schedule, str], mod_schedule: Union[Schedule, str]) -> list`
+- Helper function. Used in is_operations_same.
+- Checks whether the two  given schedules do have the same operations. Gives back the problem operations.
+- **Problems**
+    - Ignores locking/ unlocking operations.
+- **Takes**
+    - *schedule* [Schedule, str]: schedule to check against
+    - *mod_schedule* [Schedule, str]: schedule to check
+- **Returns**
+    - *list(str)*: if operations don't match it contains all operations which differ from schedule to mod_schedule 
+
+### Class: ConflictGraph
+Contains all methods to create a TM-conflict-graph.
+
+`__init__(self, labelPostfix="")`
+- Creates a conflictgraph
+- **Takes**
+    - *labelPostfix* [str] (opt): the postfix for the label to be used
+
+`isEmpty(self)`
+- Checks wether the graph contains any nodes.
+- **Returns**
+    - *bool*: is empty?
+
+`__eq__(self, obj)`
+- Checks wether a given graph and the input graph have the same nodes and edges.
+- **Takes** 
+    - *obj* [ConflictGraph]: the graph to check
+- **Returns**
+    - *bool*: wether both are the same
+
+`get_graphviz_graph(self)`
+- Method to get the graphviz digraph of a ConflictGraph.
+- **Returns**
+    - *Digraph*: digraph of the conflictgraph
+
+`add_edge(self, t1: ConflictGraphNode, t2: ConflictGraphNode) -> None`
+- Adds an edge between two nodes to the graph.
+- **Takes** 
+    - *t1* [ConflictGraphNode]: the node the edge originates from
+    - *t2* [ConflictGraphNode]: the node the edge leads to
+
+### Class: ConflictGraphNode
+
+`__init__(self, tx_number: int)`
+- Initializes a node in a conflictgraph.
+- **Problems**
+    - The names of the nodes are only numbers.
+- **Takes**
+    - *tx_number* [int]: number of the node
+
+`__eq__(self, obj)`
+- Checks wether two nodes are the same (have the same number)-
+- **Takes**
+    - *obj* [ConflictGraphNode]: The node to check against.
+- **Returns**
+    - *bool*: wether the two nodes are the same
+
+`__hash__(self)`
+- Gets the hash value of the graph.
+- **Returns**
+    - *int*: the hash value of the graph
+
+### Class: SyntaxCheck
+Class which contains all methods to check the syntax ofd given problems.\
+**Cannot be initiated.**
+
+`check_schedule_syntax(cls, schedule: str) -> str`
+- Checks the syntax of a given schedule.
+- **Problems**
+    - Takes only schedules without aborts.
+- **Takes**
+    - *schedule* [str]: the schedule to check
+- **Returns**
+    - *str*: empty if correct, otherwise error:
+        - Leerer Schedule kann keine Lösung sein
+        - Schedule '{schedule}' hat keine korrekte Syntax
+
+`check_conf_set_syntax(cls, conf_set: set[tuple[str, str]]) -> str`
+- Checks the syntax of the given conflict set.
+- **Takes**
+    - *conf_set* [set[tuple[str, str]]]: the conflict set to check
+- **Returns**
+    - *str* empty if correct, otherwise error:
+        - {conf_set} ist kein Set
+        - Das Tupel {t} von {conf_set} ist kein Paar
+        - Das Tupel {t} von {conf_set} hat keine korrekte Syntax
+
+`check(cls, index, schedule, result) -> str`
+- Check the given schedule against the given result.
+- Using 'check_operations_same' from 'Schedule'
+- **Takes**
+    - *index* [int]: number of the schedule
+    - *schedule* [str]: schedule to check against 
+    - *result* [str]: schedule to check
+- **Returns**
+    - *str* empty if correct, otherwise error:
+        - schedule_{index} enthält unterschiedliche oder nicht alle Operationen aus s{index}
