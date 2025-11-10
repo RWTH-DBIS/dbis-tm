@@ -1,0 +1,164 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python package
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  PIP_CACHE_DIR: /root/.cache/pip
+
+permissions: # for junit test execution
+  contents: read
+  checks: write
+ 
+jobs:
+  test-py310:
+    runs-on: ubuntu-22.04
+    container: python:3.10
+    env: 
+      TOXENV: py310  
+    steps:
+      - uses: actions/checkout@v4
+      
+      - &cache-pip
+        name: Cache pip
+        uses: actions/cache@v4
+        id: cache-pip
+        with:
+          path: /root/.cache/pip   
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+              
+      - &before-script
+        name: before script 
+        run: |
+          python -V
+          pip install virtualenv
+          virtualenv venv
+          . venv/bin/activate
+          
+      - &test
+        name: test ${{env.TOXENV}}
+        run: |
+          pip install tox
+          tox -r -e $TOXENV
+          
+      - &test-report
+        name: archive report 
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit.xml-${{ env.TOXENV }}
+          path: report/${{ env.TOXENV }}/report.xml
+          
+      - &test-coverage
+        name: archive coverage 
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-coverage.xml-${{ env.TOXENV }}
+          path: coverage/${{ env.TOXENV }}/coverage.xml
+
+      - &write-junit
+        name: write junit
+        uses: mikepenz/action-junit-report@v5
+        if: success() || failure() # always run even if the previous step fails
+        with:
+          report_paths: report/${{ env.TOXENV }}/report.xml
+          include_passed: true
+      
+     # - &code-coverage-summary
+     #   name: Code coverage summary
+     #   uses: irongut/CodeCoverageSummary@v1.3.0
+     #   with:
+    #      filename: coverage/${{ env.TOXENV }}/coverage.xml
+     #     badge: true
+     #     fail_below_min: true
+     #     format: text
+     #     hide_branch_rate: false
+     #     hide_complexity: true
+     #     indicators: true
+     #     output: both
+     #     thresholds: '60 80'
+      
+      - &coverage-tex
+         name: Generate coverage text
+         run: |
+          pip install tox coverage
+          coverage report -m > coverage/$TOXENV/coverage.txt
+          coverage report -m
+          
+      - &check-test-coverage
+        name: Check coverage from output
+        run: |
+          if ! grep -Ei "total.*? (100(\.0+)?|[1-9]?\d(\.\d+)?)%" coverage/$TOXENV/coverage.txt; then
+            echo "Coverage threshold not met"
+            exit 1
+          fi
+
+  
+  test-py311:
+    runs-on: ubuntu-22.04
+    container: python:3.11
+    env: 
+      TOXENV: py311  
+    steps:
+      - uses: actions/checkout@v4
+      - *cache-pip
+      - *before-script
+      - *test
+      - *test-report
+      - *test-coverage
+      - *write-junit
+      - *coverage-tex
+      - *check-test-coverage
+
+  test-py313:
+    runs-on: ubuntu-22.04
+    container: python:3.13
+    env: 
+      TOXENV: py313
+    steps:
+      - uses: actions/checkout@v4
+      - *cache-pip
+      - *before-script
+      - *test
+      - *test-report
+      - *test-coverage
+      - *write-junit
+      - *coverage-tex
+      - *check-test-coverage
+
+  formatting-check:
+    runs-on: ubuntu-22.04
+    container: python:3.10
+    steps:
+      - uses: actions/checkout@v4
+      - *cache-pip
+      - *before-script
+      - name: test formatting check
+        run: | 
+          pip install .[test]
+          black --check src/ tests/
+
+  build-job:
+    container: python:3.13
+    needs: [test-py310, test-py311, test-py313, formatting-check]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    env:
+      CI_JOB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      CI_API_V4_URL: https://api.github.com
+      CI_PROJECT_ID: ${{github.repository}}
+    steps:
+      - uses: actions/checkout@v4
+      - *cache-pip
+      - *before-script
+      - name: build job
+        run: |
+          pip install .[build]
+          python -m build
+          TWINE_PASSWORD=$CI_JOB_TOKEN TWINE_USERNAME=${{github.actor}} python -m twine upload --repository-url $CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/pypi dist/*
+          TWINE_PASSWORD=${{ secrets.PYPI_TOKEN }} TWINE_USERNAME=__token__ python -m twine upload dist/*
+        # possibly need to chenge the repository-url??
+      # publish to pypi
