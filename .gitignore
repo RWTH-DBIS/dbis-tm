@@ -352,3 +352,7 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+
+# Ignore temporary files
+*.tmp
+*.temp
