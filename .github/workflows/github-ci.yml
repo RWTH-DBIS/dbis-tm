@@ -5,6 +5,7 @@ name: Python package
 
 on:
   push:
+    # Currently runs on all branches
     # branches: [ "main" ]
 
 # env:
@@ -32,6 +33,8 @@ jobs:
 
       # - name: Check Black formatting
       #   run: black --check src/ tests/
+      - name: Install ruff
+        run: pip install ruff
 
       - name: Check Ruff linting
         run: ruff check src/ tests/
@@ -54,17 +57,42 @@ jobs:
           TOXENV=py$(echo ${{ matrix.python-version }} | tr -d '.')
           tox -r -e $TOXENV
 
+      - name: Generate coverage text report
+        if: always()
+        run: |
+          pip install coverage
+          TOXENV=py$(echo ${{ matrix.python-version }} | tr -d '.')
+          coverage report -m > coverage/$TOXENV/coverage.txt
+          coverage report -m
+
       - name: Check coverage threshold (80%)
         run: |
           COVERAGE=$(grep "TOTAL" coverage/$TOXENV/coverage.txt | awk '{print $NF}' | sed 's/%//')
           echo "Total coverage: $COVERAGE%"
           
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-            echo "Coverage is below 80% threshold"
+            echo "ATTENTION: Coverage is below 80% threshold"
             exit 1
           else
             echo "Coverage meets 80% threshold"
           fi
+
+      - name: Upload JUnit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-report-py${{ matrix.python-version }}
+          path: report/py*/report.xml
+          retention-days: 30 # Github only offers 500 MB storage for the built files. adjust retention for a cost effective plan
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-py${{ matrix.python-version }}
+          path: coverage/py*/coverage.xml
+          retention-days: 30 # Github only offers 500 MB storage for the built files. adjust retention for a cost effective plan
+
       - name: Publish test results
         uses: mikepenz/action-junit-report@v5
         if: always()
