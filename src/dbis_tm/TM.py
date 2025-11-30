@@ -7,8 +7,8 @@ Created 2022-05
 """
 from __future__ import annotations
 
-import itertools
-import sys, re
+
+import re
 from enum import Enum, EnumMeta
 from typing import Union
 from graphviz import Digraph
