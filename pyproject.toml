@@ -21,7 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "black==23.12.1"
+    "black==24.8.0"
 ]
 build = [
     "twine==6.*",
