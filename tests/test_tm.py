@@ -45,7 +45,7 @@ class Test_TM(ScheduleTest):
             "r1(x)w2(y)r1(x)w3(z)w3(x)r1(y)1(y)w2(z)w1(z)w3(y)c3r2(y)c2w1(y)c1",
             False,
             False,
-        )
+        ),
         # malformed
     ]
 
