@@ -31,8 +31,8 @@ jobs:
         run: pip install .[test,lint]
       # add this for spacing and other conventions
 
-      # - name: Check Black formatting
-      #   run: black --check src/ tests/
+      - name: Check Black formatting
+        run: black --check src/ tests/
       - name: Install ruff
         run: pip install ruff
 
